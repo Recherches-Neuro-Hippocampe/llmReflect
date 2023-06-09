@@ -9,10 +9,11 @@ the major part that Agents can tune.
 from typing import Dict, List, Any
 from langchain.prompts.prompt import PromptTemplate
 import os
-from ..Utils import message
+from Utils.message import message
 import json
 
-PROMPT_BASE_DIR = "promptbase"
+PROMPT_BASE_DIR = os.path.join(os.getcwd(), 'Prompt', 'promptbase')
+print(PROMPT_BASE_DIR)
 
 
 class BasicPrompt:
@@ -46,15 +47,16 @@ def load_prompt(promptname: str) -> BasicPrompt:
 
 def save_prompt(promptname, prompt_dict: dict):
     try:
-        assert len(prompt_dict.keys) == 3
+        assert len(prompt_dict.keys()) == 3
         assert "HARD" in prompt_dict.keys()
         assert "SOFT" in prompt_dict.keys()
         assert "INCONTEXT" in prompt_dict.keys()
     except Exception:
         message(msg="Prompt dictionary format is illegal!", color="red")
+        return
 
     saving_dir = os.path.join(PROMPT_BASE_DIR, f"{promptname}.json")
-    with open(saving_dir) as writefile:
+    with open(saving_dir, 'w') as writefile:
         json.dump(prompt_dict, writefile)
 
     message(msg=f"{promptname} has been dumped into {saving_dir}",
