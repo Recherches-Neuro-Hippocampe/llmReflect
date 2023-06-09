@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flake8 = "*"
+pandas = "*"
+python-decouple = "*"
+markdown = "*"
+openai = "*"
+matplotlib = "*"
+seaborn = "*"
+psycopg2-binary = "*"
+langchain = "*"
+python-environ = "*"
+pgeocode = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
