@@ -1,5 +1,5 @@
-from Prompt import BasicPrompt
-
+from Prompt import Prompt
+from Agents import PostgressqlAgent
 
 hard = '''\
 Given an input question, you should answer the question by\
@@ -114,11 +114,15 @@ AND "allergy_name" IS NOT null
 GROUP BY "patient_code","patient_first_name", "patient_last_name";
 '''
 
-BasicPrompt.save_prompt(
-    promptname="SQL",
-    prompt_dict={
-        "HARD": hard,
-        "SOFT": soft,
-        "INCONTEXT": in_context
-    }
-)
+# Prompt.save_prompt(
+#     promptname="postgressql",
+#     prompt_dict={
+#         "HARD": hard,
+#         "SOFT": soft,
+#         "INCONTEXT": in_context
+#     }
+# )
+
+from Scripts import run_database
+
+run_database.run()

@@ -6,14 +6,14 @@ A prompt can be divied into 3 parts:
 3. In-context learning, places for holding in-context learning examples,
 the major part that Agents can tune.
 """
-from typing import Dict, List, Any
+from typing import Dict, Any
 from langchain.prompts.prompt import PromptTemplate
 import os
 from Utils.message import message
 import json
+import re
 
 PROMPT_BASE_DIR = os.path.join(os.getcwd(), 'Prompt', 'promptbase')
-print(PROMPT_BASE_DIR)
 
 
 class BasicPrompt:
@@ -21,8 +21,32 @@ class BasicPrompt:
         self.hard_rules = js["HARD"]
         self.soft_rules = js["SOFT"]
         self.in_context_learning = js["INCONTEXT"]
-        print(self.hard_rules)
-        self.input_list = []
+        self.input_list = self.__get_inputs__()
+        self.string_temp = ""
+        self.__assemble__()
+        self.prompt_template = PromptTemplate(input_variables=self.input_list,
+                                              template=self.string_temp)
+
+    def __get_inputs__(self):
+        pattern = r'{([^}]*)}'
+        matches = re.findall(pattern, self.hard_rules)
+        matches.append("input")
+        return matches
+
+    def __assemble__(self):
+        self.string_temp = ""
+        self.string_temp += self.hard_rules
+        self.string_temp += "\n"
+        self.string_temp += self.soft_rules
+        self.string_temp += "\n"
+        self.string_temp += self.in_context_learning
+        self.string_temp += "\n"
+        self.string_temp += "Request: {input}"
+        self.string_temp += "\n"
+        self.string_temp += "Answer: "
+
+    def get_langchain_prompt_template(self):
+        return self.prompt_template
 
 
 def load_prompt(promptname: str) -> BasicPrompt:
@@ -32,14 +56,15 @@ def load_prompt(promptname: str) -> BasicPrompt:
             "SOFT": "",
             "INCONTEXT": ""
         }
+    prompt_dir = os.path.join(PROMPT_BASE_DIR, promptname + '.json')
 
     try:
-        with os.open(os.path.join(PROMPT_BASE_DIR, promptname, '.json'), 'r') \
-                as openfile:
+        with open(prompt_dir, 'r') as openfile:
             js = json.load(openfile)
         message(msg=f"{promptname} prompt loaded successfully!", color="green")
 
-    except Exception:
+    except Exception as error:
+        print(type(error).__name__)
         message(msg=f"Prompt {promptname} not found!", color="red")
         js = default_js
     return BasicPrompt(js=js)
