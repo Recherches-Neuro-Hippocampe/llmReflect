@@ -15,7 +15,7 @@ psycopg2-binary = "*"
 langchain = "*"
 python-environ = "*"
 pgeocode = "*"
-
+SQLAlchemy = "*"
 [dev-packages]
 
 [requires]
