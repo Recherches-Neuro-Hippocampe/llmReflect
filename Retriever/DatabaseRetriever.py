@@ -1,6 +1,7 @@
 from Retriever.BasicRetriever import BasicRetriever
 from typing import List
-from Utils.database import SQLDatabase, upper_boundary_maximum_records
+from Utils.database import upper_boundary_maximum_records
+from langchain.sql_database import SQLDatabase
 from sqlalchemy import text
 import random
 
