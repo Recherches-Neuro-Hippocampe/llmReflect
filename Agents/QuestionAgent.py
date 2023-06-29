@@ -6,7 +6,7 @@ from Utils.message import message
 from Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
-class PostgressqlQuestionAgent(Agent):
+class PostgresqlQuestionAgent(Agent):
     """
     Agent for creating questions based on a given database
     Args:

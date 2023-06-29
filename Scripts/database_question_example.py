@@ -1,10 +1,10 @@
-from Agents.QuestionAgent import PostgressqlQuestionAgent
+from Agents.QuestionAgent import PostgresqlQuestionAgent
 from Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 from decouple import config
 
 
 def run(n_questions=5):
-    agent = PostgressqlQuestionAgent()
+    agent = PostgresqlQuestionAgent()
     uri = "postgresql+psycopg2://"\
         + f"postgres:{config('DBPASSWORD')}@localhost:5432/postgres"
     db_retriever = DatabaseQuestionRetriever(
