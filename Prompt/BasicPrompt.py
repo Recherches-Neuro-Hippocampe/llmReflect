@@ -17,7 +17,33 @@ PROMPT_BASE_DIR = os.path.join(os.getcwd(), 'Prompt', 'promptbase')
 
 
 class BasicPrompt:
+    """
+    Mighty mother of all prompts (In this repo I mean)
+    """
     def __init__(self, prompt_dict: Dict[str, Any], promptname: str) -> None:
+        """
+        If you want to start working on a prompt from scratch,
+        a dictionary containing the prompts and name of this prompt
+        are required.
+        Args:
+            prompt_dict (Dict[str, Any]): In this design,
+            a prompt can be divided into 3 parts,
+            hard rules, soft rule and in-context learning.
+            Hard rules indicate the general context for the LLM and
+            we usually do not change the hard rules.
+            Soft rules are the rules that focus on the refine the
+            behavior for the model, used for formatting or tuning.
+            In-context learning is just a cool word to say examples.
+            We all need examples right?
+            promptname (str): nickname by you for the prompt.
+            Also used as the file name to store the prompt in
+            json format in 'promptbase' folder.
+
+            Overall this design is to enable the model to tune itself.
+            So there are rules the model can touch and others cant.
+            Also I hate people keeping prompts in the coding logic place.
+
+        """
         self.promptname = promptname
         self.prompt_dict = prompt_dict
         self._hard_rules = prompt_dict["HARD"]
@@ -38,6 +64,9 @@ class BasicPrompt:
         return matches
 
     def __assemble__(self):
+        """
+        assemble into one string
+        """
         self.string_temp = ""
         self.string_temp += self.hard_rules
         self.string_temp += "\n\n"
@@ -76,6 +105,9 @@ class BasicPrompt:
         return cls(prompt_dict=js, promptname=promptname)
 
     def save_prompt(self):
+        """
+        save prompt into json file.
+        """
         try:
             assert len(self.prompt_dict.keys()) == 3
             assert "HARD" in self.prompt_dict.keys()

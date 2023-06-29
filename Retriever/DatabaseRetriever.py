@@ -6,7 +6,7 @@ import random
 
 
 class DatabaseRetriever(BasicRetriever):
-    """Retriever based on BasicRetriever, used for querrying database
+    """Retriever based on BasicRetriever, used for querying database
     Args:
         BasicRetriever (_type_): _description_
     """

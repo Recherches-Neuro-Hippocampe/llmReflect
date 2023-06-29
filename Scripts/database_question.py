@@ -7,7 +7,7 @@ def run(n_questions=5):
     agent = PostgressqlQuestionAgent()
     uri = "postgresql+psycopg2://"\
         + f"postgres:{config('DBPASSWORD')}@localhost:5432/postgres"
-    db_retrivever = DatabaseQuestionRetriever(
+    db_retriever = DatabaseQuestionRetriever(
         uri=uri,
         include_tables=[
             'tb_patient',
@@ -18,6 +18,6 @@ def run(n_questions=5):
         ],
         sample_rows=0
     )
-    agent.equip_retriever(db_retrivever)
+    agent.equip_retriever(db_retriever)
     result = agent.predict_n_questions(n_questions=n_questions)
     return result

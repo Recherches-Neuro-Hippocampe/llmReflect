@@ -1,13 +1,13 @@
-from Agents.PostgressqlAgent import PostgresSQLAgent
+from Agents.PostgressqlAgent import PostgresqlAgent
 from Retriever.DatabaseRetriever import DatabaseRetriever
 from decouple import config
 
 
 def run(request: str, return_cmd: bool):
-    agent = PostgresSQLAgent()
+    agent = PostgresqlAgent()
     uri = "postgresql+psycopg2://"\
         + f"postgres:{config('DBPASSWORD')}@localhost:5432/postgres"
-    db_retrivever = DatabaseRetriever(
+    db_retriever = DatabaseRetriever(
         uri=uri,
         include_tables=[
             'tb_patient',
@@ -18,6 +18,6 @@ def run(request: str, return_cmd: bool):
         ],
         max_rows_return=500
     )
-    agent.equip_retriever(db_retrivever)
+    agent.equip_retriever(db_retriever)
     result = agent.predict_db_summary(request, return_cmd=return_cmd)
     return result
