@@ -55,7 +55,7 @@ class PostgresqlAgent(Agent):
         """
         Predict sql cmd based on the user's description then
         use the langchain method run_no_throw
-        to retrieve sql result. 
+        to retrieve sql result.
         Args:
             user_input (str): users description for the query.
 

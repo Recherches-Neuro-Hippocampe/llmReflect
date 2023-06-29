@@ -1,8 +1,16 @@
 import re
-from langchain.sql_database import SQLDatabase
 
 
-def upper_boundary_maximum_records(sql_cmd, max_present):
+def upper_boundary_maximum_records(sql_cmd: str, max_present: int) -> str:
+    """
+    replace the LIMIT in a query
+    Args:
+        sql_cmd (_type_): original sql command
+        max_present (_type_): maximum number of returned entries
+
+    Returns:
+        sql_cmd: bounded sql command
+    """
     re_pattern = 'LIMIT [0-9]*'
     limit_number_found = re.findall(re_pattern, sql_cmd, re.IGNORECASE)
     if len(limit_number_found) > 0:

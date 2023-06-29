@@ -38,8 +38,7 @@ class DatabaseRetriever(BasicRetriever):
         processed_llm_output = llm_output.strip('\n').strip(' ')
         processed_llm_output = upper_boundary_maximum_records(
             sql_cmd=processed_llm_output,
-            max_present=self.max_rows_return
-            ).lower()
+            max_present=self.max_rows_return).lower()
         # if getting an error from the database
         # we take the error as another format of output
         result = self.database.run_no_throw(command=processed_llm_output)
@@ -50,8 +49,7 @@ class DatabaseRetriever(BasicRetriever):
 
         sql_cmd = upper_boundary_maximum_records(
             sql_cmd=processed_llm_output,
-            max_present=self.max_rows_return
-            ).lower()
+            max_present=self.max_rows_return).lower()
         sql_cmd = text(sql_cmd)
         col_names = []
         with self.database._engine.begin() as connection:
