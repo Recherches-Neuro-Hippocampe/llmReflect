@@ -1,9 +1,9 @@
-from Agents.BasicAgent import Agent
-from Prompt.GradingPrompt import GradingPrompt
+from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.Prompt.GradingPrompt import GradingPrompt
 from langchain.llms.openai import OpenAI
 from decouple import config
-from Utils.message import message
-from Retriever.BasicRetriever import BasicEvaluationRetriever
+from llmreflect.Utils.message import message
+from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 
 
 class PostgressqlGradingAgent(Agent):

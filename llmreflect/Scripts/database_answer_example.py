@@ -1,13 +1,13 @@
-from Agents.QuestionAgent import PostgresqlQuestionAgent
-from Retriever.DatabaseRetriever import DatabaseQuestionRetriever
+from llmreflect.Agents.PostgressqlAgent import PostgresqlAgent
+from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from decouple import config
 
 
-def run(n_questions=5):
-    agent = PostgresqlQuestionAgent()
+def run(request: str, return_cmd: bool):
+    agent = PostgresqlAgent()
     uri = "postgresql+psycopg2://"\
         + f"postgres:{config('DBPASSWORD')}@localhost:5432/postgres"
-    db_retriever = DatabaseQuestionRetriever(
+    db_retriever = DatabaseRetriever(
         uri=uri,
         include_tables=[
             'tb_patient',
@@ -16,8 +16,8 @@ def run(n_questions=5):
             'tb_patient_mmse_and_moca_scores',
             'tb_patient_medications'
         ],
-        sample_rows=0
+        max_rows_return=500
     )
     agent.equip_retriever(db_retriever)
-    result = agent.predict_n_questions(n_questions=n_questions)
+    result = agent.predict_db_summary(request, return_cmd=return_cmd)
     return result

@@ -1,7 +1,8 @@
-from Agents.EvaluationAgent import PostgressqlGradingAgent
-from Retriever.BasicRetriever import BasicEvaluationRetriever
+from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
+from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 
-from Scripts import database_answer_example, database_question_example
+from llmreflect.Scripts import database_answer_example,\
+    database_question_example
 
 
 def run(n_question: int = 5):

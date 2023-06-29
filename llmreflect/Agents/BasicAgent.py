@@ -1,8 +1,8 @@
 from langchain.chains import LLMChain
-from Prompt.BasicPrompt import BasicPrompt
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from langchain.llms.base import BaseLLM
 from abc import ABC, abstractclassmethod
-from Retriever.BasicRetriever import BasicRetriever
+from llmreflect.Retriever.BasicRetriever import BasicRetriever
 
 
 class Agent(LLMChain, ABC):

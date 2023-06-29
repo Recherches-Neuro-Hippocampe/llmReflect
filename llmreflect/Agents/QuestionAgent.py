@@ -1,9 +1,9 @@
-from Agents.BasicAgent import Agent
-from Prompt.QuestionPrompt import QuestionPostgresPrompt
+from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.Prompt.QuestionPrompt import QuestionPostgresPrompt
 from langchain.llms.openai import OpenAI
 from decouple import config
-from Utils.message import message
-from Retriever.DatabaseRetriever import DatabaseQuestionRetriever
+from llmreflect.Utils.message import message
+from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
 class PostgresqlQuestionAgent(Agent):
@@ -18,7 +18,7 @@ class PostgresqlQuestionAgent(Agent):
         more diverse questions.
         """
         prompt = QuestionPostgresPrompt.\
-            load_prompt_from_json_file('questionpostgressql')
+            load_prompt_from_json_file('questionpostgresql')
         llm = OpenAI(temperature=0.7, openai_api_key=config('OPENAI_API_KEY'))
         llm.max_tokens = int(config('MAX_OUTPUT'))
         super().__init__(prompt=prompt,

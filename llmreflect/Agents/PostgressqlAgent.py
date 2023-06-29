@@ -1,9 +1,9 @@
-from Agents.BasicAgent import Agent
+from llmreflect.Agents.BasicAgent import Agent
 from langchain.llms.openai import OpenAI
 from decouple import config
-from Utils.message import message
-from Retriever.DatabaseRetriever import DatabaseRetriever
-from Prompt.BasicPrompt import BasicPrompt
+from llmreflect.Utils.message import message
+from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any
 
 

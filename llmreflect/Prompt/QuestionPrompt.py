@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from Prompt.BasicPrompt import BasicPrompt
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 import re
 
 

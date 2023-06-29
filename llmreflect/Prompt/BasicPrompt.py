@@ -9,11 +9,12 @@ the major part that Agents can tune.
 from typing import Dict, Any
 from langchain.prompts.prompt import PromptTemplate
 import os
-from Utils.message import message
+from llmreflect.Utils.message import message
 import json
 import re
 
-PROMPT_BASE_DIR = os.path.join(os.getcwd(), 'Prompt', 'promptbase')
+PROMPT_BASE_DIR = os.path.join(os.getcwd(),
+                               'llmreflect', 'Prompt', 'promptbase')
 
 
 class BasicPrompt:
@@ -90,7 +91,7 @@ class BasicPrompt:
             "SOFT": "",
             "INCONTEXT": ""}
         prompt_dir = os.path.join(PROMPT_BASE_DIR, promptname + '.json')
-
+        print(prompt_dir)
         try:
             with open(prompt_dir, 'r') as openfile:
                 js = json.load(openfile)
