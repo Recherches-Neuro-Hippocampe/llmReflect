@@ -16,6 +16,7 @@ langchain = "*"
 python-environ = "*"
 pgeocode = "*"
 SQLAlchemy = "*"
+pytest="*"
 [dev-packages]
 
 [requires]

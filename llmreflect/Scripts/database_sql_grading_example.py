@@ -26,3 +26,6 @@ def run(n_question: int = 5):
         print(result['summary'])
         print(grading)
         print("=============================")
+
+
+run(5)
