@@ -1,2 +1,3 @@
-def pseudo_test():
+def test():
     print("pseudo test")
+    assert True
