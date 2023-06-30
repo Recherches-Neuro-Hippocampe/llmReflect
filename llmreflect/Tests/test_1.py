@@ -1,3 +1,8 @@
-from llmreflect.Scripts import database_sql_grading_example
+from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
+from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 
-database_sql_grading_example.run(n_question=2)
+
+def test_postgres_grading_agent():
+    agent = PostgressqlGradingAgent()
+    retriever = BasicEvaluationRetriever()
+    agent.equip_retriever(retriever)
