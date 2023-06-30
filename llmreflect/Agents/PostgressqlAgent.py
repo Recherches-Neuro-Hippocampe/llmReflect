@@ -1,6 +1,5 @@
 from llmreflect.Agents.BasicAgent import Agent
 from langchain.llms.openai import OpenAI
-from decouple import config
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
@@ -13,10 +12,24 @@ class PostgresqlAgent(Agent):
     Args:
         Agent (_type_): _description_
     """
-    def __init__(self):
-        prompt = BasicPrompt.load_prompt_from_json_file('postgressql')
-        llm = OpenAI(temperature=0, openai_api_key=config('OPENAI_API_KEY'))
-        llm.max_tokens = int(config('MAX_OUTPUT'))
+    def __init__(self, open_ai_key: str,
+                 prompt_name: str = 'postgressql',
+                 max_output_tokens: int = 512,
+                 temperature: float = 0.0):
+        """
+        Agent class for querying database.
+        Args:
+            open_ai_key (str): API key to connect to chatgpt service.
+            prompt_name (str, optional): name for the prompt json file.
+                Defaults to 'postgressql'.
+            max_output_tokens (int, optional): maximum completion length.
+                Defaults to 512.
+            temperature (float, optional): how consistent the llm performs.
+                The lower the more consistent. Defaults to 0.0.
+        """
+        prompt = BasicPrompt.load_prompt_from_json_file(prompt_name)
+        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
+        llm.max_tokens = max_output_tokens
         super().__init__(prompt=prompt,
                          llm=llm)
 
@@ -51,7 +64,11 @@ class PostgresqlAgent(Agent):
             )
         return llm_output
 
-    def predict_db(self, user_input: str) -> str:
+    def predict_db(self, user_input: str,
+                   get_cmd: bool = False,
+                   get_summary: bool = False,
+                   get_db: bool = False
+                   ) -> str:
         """
         Predict sql cmd based on the user's description then
         use the langchain method run_no_throw
@@ -64,9 +81,25 @@ class PostgresqlAgent(Agent):
             database cursor result into a string. Not very useful, I dont
             know why Im keeping this method.
         """
+        assert get_cmd or get_summary or get_db, "At least get one thing"
         llm_output = self.predict_sql_cmd(user_input=user_input)
-        sql_result = self.retriever.retrieve(llm_output=llm_output)
-        return sql_result
+
+        cmd_n_summary = self.retriever.retrieve_summary(
+            llm_output=llm_output,
+            return_cmd=True)
+
+        cmd = cmd_n_summary['cmd']
+        summary = cmd_n_summary['summary']
+
+        result_dict = {}
+        if get_cmd:
+            result_dict['cmd'] = cmd
+        if get_summary:
+            result_dict['summary'] = summary
+        if get_db:
+            db = self.retriever.retrieve(llm_output=llm_output)
+            result_dict['db'] = db
+        return result_dict
 
     def predict_db_summary(self, user_input: str,
                            return_cmd: bool = False) -> Any:

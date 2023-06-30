@@ -30,5 +30,4 @@ class Agent(LLMChain, ABC):
         Returns:
             _type_: _description_
         """
-        print(self.prompt.input_variables)
         return self.prompt.input_variables

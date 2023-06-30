@@ -1,25 +1,35 @@
 from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Prompt.GradingPrompt import GradingPrompt
 from langchain.llms.openai import OpenAI
-from decouple import config
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 
 
 class PostgressqlGradingAgent(Agent):
-    """_summary_
+    """
     This is the agent class use for grading postgresql generation.
     Args:
         Agent (_type_): _description_
     """
-    def __init__(self):
+    def __init__(self, open_ai_key: str,
+                 prompt_name: str = 'gradingpostgresql',
+                 max_output_tokens: int = 512,
+                 temperature: float = 0.0):
         """
-        Temperature set to 0, since evaluation needs to be consistent.
+        Agent class for grading the performance of postgresql generator.
+        Args:
+            open_ai_key (str): API key to connect to chatgpt service.
+            prompt_name (str, optional): name for the prompt json file.
+                Defaults to 'gradingpostgresql'.
+            max_output_tokens (int, optional): maximum completion length.
+                Defaults to 512.
+            temperature (float, optional): how consistent the llm performs.
+                The lower the more consistent. Defaults to 0.0.
         """
         prompt = GradingPrompt.\
-            load_prompt_from_json_file('gradingpostgresql')
-        llm = OpenAI(temperature=0.0, openai_api_key=config('OPENAI_API_KEY'))
-        llm.max_tokens = int(config('MAX_OUTPUT'))
+            load_prompt_from_json_file(prompt_name)
+        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
+        llm.max_tokens = max_output_tokens
         super().__init__(prompt=prompt,
                          llm=llm)
 

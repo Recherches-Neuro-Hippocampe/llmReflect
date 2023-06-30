@@ -1,7 +1,6 @@
 from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Prompt.QuestionPrompt import QuestionPostgresPrompt
 from langchain.llms.openai import OpenAI
-from decouple import config
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
@@ -12,15 +11,27 @@ class PostgresqlQuestionAgent(Agent):
     Args:
         Agent (_type_): _description_
     """
-    def __init__(self):
+    def __init__(self, open_ai_key: str,
+                 prompt_name: str = 'questionpostgresql',
+                 max_output_tokens: int = 512,
+                 temperature: float = 0.7):
         """
-        A high temperature is required to obtain
-        more diverse questions.
+        Agent class for querying database.
+        Args:
+            open_ai_key (str): API key to connect to chatgpt service.
+            prompt_name (str, optional): name for the prompt json file.
+                Defaults to 'questionpostgresql'.
+            max_output_tokens (int, optional): maximum completion length.
+                Defaults to 512.
+            temperature (float, optional): how consistent the llm performs.
+                The lower the more consistent. To obtain diverse questions,
+                a high temperature is recommended.
+                Defaults to 0.0.
         """
         prompt = QuestionPostgresPrompt.\
-            load_prompt_from_json_file('questionpostgresql')
-        llm = OpenAI(temperature=0.7, openai_api_key=config('OPENAI_API_KEY'))
-        llm.max_tokens = int(config('MAX_OUTPUT'))
+            load_prompt_from_json_file(prompt_name)
+        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
+        llm.max_tokens = max_output_tokens
         super().__init__(prompt=prompt,
                          llm=llm)
 
