@@ -18,7 +18,7 @@ llmReflect is on PYPI.
 ### 1. Case 1: 
 Create a chain for a following workflow:
 * asking questions given by a dataset
-* general postgresql cmd to solve the question
+* generate postgresql cmd to solve the question
 * score itself's performance
 
 ```
