@@ -8,11 +8,13 @@ llmReflect is a python package designed for large language model (**LLM**) appli
 **Warning!** This project is at the very early stage!
 
 ## Installation
-
-llmReflect is on PYPI.
-
+* 1.  llmReflect is on PYPI. \
 `pip install llmreflect`
 
+* 2. use pipenv and git clone \
+`git clone https://github.com/Recherches-Neuro-Hippocampe/llmReflect.git`
+`pipenv shell`
+`pipenv install`
 
 ## Basic usage
 ### 1. Case 1: 
