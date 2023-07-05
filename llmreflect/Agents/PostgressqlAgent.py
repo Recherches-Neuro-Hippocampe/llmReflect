@@ -13,9 +13,10 @@ class PostgresqlAgent(Agent):
         Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'postgressql',
+                 prompt_name: str = 'postgresql',
                  max_output_tokens: int = 512,
-                 temperature: float = 0.0):
+                 temperature: float = 0.0,
+                 split_symbol="[answer]"):
         """
         Agent class for querying database.
         Args:
@@ -32,6 +33,7 @@ class PostgresqlAgent(Agent):
         llm.max_tokens = max_output_tokens
         super().__init__(prompt=prompt,
                          llm=llm)
+        object.__setattr__(self, 'split_symbol', split_symbol)
 
     def equip_retriever(self, retriever: DatabaseRetriever):
         """_summary_
@@ -60,7 +62,7 @@ class PostgresqlAgent(Agent):
                 dialect=self.retriever.database_dialect,
                 max_present=self.retriever.max_rows_return,
                 table_info=self.retriever.table_info,
-                input=user_input
+                request=user_input
             )
         return llm_output
 
@@ -86,7 +88,8 @@ class PostgresqlAgent(Agent):
 
         cmd_n_summary = self.retriever.retrieve_summary(
             llm_output=llm_output,
-            return_cmd=True)
+            return_cmd=True,
+            split_symbol=self.split_symbol)
 
         cmd = cmd_n_summary['cmd']
         summary = cmd_n_summary['summary']
@@ -97,7 +100,8 @@ class PostgresqlAgent(Agent):
         if get_summary:
             result_dict['summary'] = summary
         if get_db:
-            db = self.retriever.retrieve(llm_output=llm_output)
+            db = self.retriever.retrieve(llm_output=llm_output,
+                                         split_symbol=self.split_symbol)
             result_dict['db'] = db
         return result_dict
 
@@ -125,5 +129,6 @@ class PostgresqlAgent(Agent):
         llm_output = self.predict_sql_cmd(user_input=user_input)
         result = self.retriever.retrieve_summary(
             llm_output=llm_output,
-            return_cmd=return_cmd)
+            return_cmd=return_cmd,
+            split_symbol=self.split_symbol)
         return result

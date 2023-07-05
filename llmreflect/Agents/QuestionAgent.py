@@ -1,5 +1,5 @@
 from llmreflect.Agents.BasicAgent import Agent
-from llmreflect.Prompt.QuestionPrompt import QuestionPostgresPrompt
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from langchain.llms.openai import OpenAI
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
@@ -28,7 +28,7 @@ class PostgresqlQuestionAgent(Agent):
                 a high temperature is recommended.
                 Defaults to 0.0.
         """
-        prompt = QuestionPostgresPrompt.\
+        prompt = BasicPrompt.\
             load_prompt_from_json_file(prompt_name)
         llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
         llm.max_tokens = max_output_tokens

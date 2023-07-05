@@ -1,5 +1,5 @@
 from llmreflect.Agents.BasicAgent import Agent
-from llmreflect.Prompt.GradingPrompt import GradingPrompt
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from langchain.llms.openai import OpenAI
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
@@ -26,7 +26,7 @@ class PostgressqlGradingAgent(Agent):
             temperature (float, optional): how consistent the llm performs.
                 The lower the more consistent. Defaults to 0.0.
         """
-        prompt = GradingPrompt.\
+        prompt = BasicPrompt.\
             load_prompt_from_json_file(prompt_name)
         llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
         llm.max_tokens = max_output_tokens
@@ -55,8 +55,8 @@ class PostgressqlGradingAgent(Agent):
         else:
             llm_output = self.predict(
                 request=request,
-                sql_cmd=sql_cmd,
-                db_summary=db_summary
+                command=sql_cmd,
+                summary=db_summary
             )
             result = self.retriever.retrieve(llm_output)
         return result

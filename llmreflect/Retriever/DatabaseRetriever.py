@@ -35,21 +35,28 @@ class DatabaseRetriever(BasicRetriever):
         self.database_dialect = self.database.dialect
         self.table_info = self.database.get_table_info_no_throw()
 
-    def retrieve(self, llm_output: str):
-        processed_llm_output = llm_output.strip('\n').strip(' ')
-        processed_llm_output = upper_boundary_maximum_records(
-            sql_cmd=processed_llm_output,
+    def retrieve_cmd(self, llm_output: str, split_symbol: str = "] "):
+        processed_llm_output = llm_output.split(split_symbol)[-1]
+        processed_llm_output = processed_llm_output.strip('\n').strip(' ')
+        return processed_llm_output
+
+    def retrieve(self, llm_output: str, split_symbol: str = "] "):
+        sql_cmd = self.retrieve_cmd(llm_output=llm_output,
+                                    split_symbol=split_symbol)
+        sql_cmd = upper_boundary_maximum_records(
+            sql_cmd=sql_cmd,
             max_present=self.max_rows_return).lower()
         # if getting an error from the database
         # we take the error as another format of output
-        result = self.database.run_no_throw(command=processed_llm_output)
+        result = self.database.run_no_throw(command=sql_cmd)
         return result
 
-    def retrieve_summary(self, llm_output: str, return_cmd: bool = False):
-        processed_llm_output = llm_output.strip('\n').strip(' ')
-
+    def retrieve_summary(self, llm_output: str, return_cmd: bool = False,
+                         split_symbol: str = "] "):
+        sql_cmd = self.retrieve_cmd(llm_output=llm_output,
+                                    split_symbol=split_symbol)
         sql_cmd = upper_boundary_maximum_records(
-            sql_cmd=processed_llm_output,
+            sql_cmd=sql_cmd,
             max_present=self.max_rows_return).lower()
         sql_cmd = text(sql_cmd)
         col_names = []
@@ -99,12 +106,8 @@ class DatabaseQuestionRetriever(DatabaseRetriever):
             _type_: a processed string
         """
         processed_llm_output = llm_output.strip("\n").strip(' ')
-        # print(processed_llm_output)
-        q_e_list = processed_llm_output.split('\n')
+        q_e_list = processed_llm_output.split('\n')[1:]
         results = []
-        for string in q_e_list:
-            if string.startswith('Question: '):
-                processed_question = string.split("Question:")[-1]
-                processed_question = processed_question.strip('\n').strip(' ')
-                results.append(processed_question)
+        for line in q_e_list:
+            results.append(line.split('] ')[-1])
         return results

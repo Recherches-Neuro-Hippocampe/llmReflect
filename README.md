@@ -42,3 +42,60 @@ def test_grading_chain():
 
 ```
 
+### 2. Case 2:
+How to write your own prompt and save it to your prompt base in llmReflect
+
+```
+from llmreflect.Prompt.BasicPrompt import BasicPrompt  # import the prompt class
+
+
+prompt_dict = {
+    "HARD": "most important rules, like general context, role acting etc.",
+    'SOFT': "minor rules/guide for the llm, what need to pay attention to.",
+    'INCONTEXT': [
+        # show llm some examples
+        {
+            'request': "show me the names and phone numbers of the patients that are likely to have an error in their birth date",
+            'command': '''\
+select "uuid_patient","patient_code", "patient_first_name","patient_last_name",array_agg("phones") filter (where phones <> '{{}}') as "phones"
+from tb_patient
+where "patient_birth_date" > current_date
+or "patient_birth_date" < '1900-01-01'
+group by "uuid_patient", "patient_code","patient_first_name","patient_last_name"
+limit 500;
+''',
+            'summary': "Error: Found 0 record! Empty response!",
+            'grading': "9.2",
+            'explanation': "It is very good. It filled the blank of what could be an error in birth date by some common sense. The syntax is correct, the query is executable. Even though it got an empty response, it is because the dataset does not contain such content."
+        }
+    ],
+    'FORMAT': { # dictionary indicating the format for llm
+        'request': {'type': 'INPUT',
+                    'explanation': "User's natural language request"},
+        'command': {
+            'type': 'INPUT',
+            'explanation': "the generated postgresql command"
+        },
+        'summary': {
+            'type': 'INPUT',
+            'explanation': "a summary for the excution result from database"
+        },
+        'grading': {
+            'type': 'OUTPUT',
+            'explanation': "the score you assign to the postgresql command, a number range from 0 to 10"
+        },
+        'explanation': {
+            'type': 'OUTPUT',
+            'explanation': "the reason for your scoring"
+        },
+    }
+}
+
+p = BasicPrompt(
+    prompt_dict=prompt_dict,
+    promptname="gradingpostgresql" # the name is used for saving and referencing
+)
+p.save_prompt()
+
+```
+
