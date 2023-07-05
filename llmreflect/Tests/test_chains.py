@@ -13,7 +13,8 @@ def in_workflow():
         or os.getenv("GITLAB_CI")
 
 
-@pytest.mark.skipif(in_workflow(), reason="Only test database operations \
+@pytest.mark.skipif(bool(in_workflow()),
+                    reason="Only test database operations \
                     in local env")
 def test_moderate_chain():
     from llmreflect.Chains.ModerateChain import ModerateChain
@@ -39,7 +40,8 @@ def test_moderate_chain():
     print(result['explanation'])
 
 
-@pytest.mark.skipif(in_workflow(), reason="Only test database operations \
+@pytest.mark.skipif(bool(in_workflow()),
+                    reason="Only test database operations \
                     in local env")
 def test_grading_chain():
 
