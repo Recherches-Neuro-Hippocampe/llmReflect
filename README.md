@@ -1,8 +1,8 @@
 # llmReflect
-[![PyPI version](https://badge.fury.io/py/llmreflect.svg)](https://badge.fury.io/py/llmreflect) ![Python Versions](https://img.shields.io/pypi/pyversions/llmreflect) 
+[![PyPI version](https://badge.fury.io/py/llmreflect.svg)](https://badge.fury.io/py/llmreflect)
+[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://img.shields.io/badge/python-3.11-blue.svg)
 [![Python package](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-package.yml)
-[![Upload Python Package](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-publish.yml/badge.svg?branch=main)](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-publish.yml)
-
+[![Upload Python Package](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-publish.yml/badge.svg)](https://github.com/Recherches-Neuro-Hippocampe/llmReflect/actions/workflows/python-publish.yml)
 llmReflect is a python package designed for large language model (**LLM**) applications. We have seen numerous emergent abilities so far. Given by a right prompt, a LLM is capable of various tasks. Also the art of writing a prompt usually determines the performance of the LLM at that task. So is there a chance that we can use LLM to evaluate / improve itself's prompt?
 
 **Warning!** This project is at the very early stage!
