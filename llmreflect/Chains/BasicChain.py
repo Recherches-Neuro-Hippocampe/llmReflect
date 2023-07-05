@@ -1,7 +1,9 @@
 from abc import ABC, abstractclassmethod
 from llmreflect.Retriever.BasicRetriever import BasicRetriever
 from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any
+from langchain.llms.openai import OpenAI
 
 
 class BasicChain(ABC):
@@ -16,6 +18,18 @@ class BasicChain(ABC):
         self.agent = agent
         self.retriever = retriever
         self.agent.equip_retriever(self.retriever)
+
+    @abstractclassmethod
+    def from_config(cls,
+                    open_ai_key: str,
+                    prompt_name: str = 'questionpostgresql',
+                    temperature: float = 0.0):
+        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
+        agent = Agent(prompt=BasicPrompt.
+                      load_prompt_from_json_file(prompt_name),
+                      llm=llm)
+        retriever = BasicRetriever()
+        return cls(agent=agent, retriever=retriever)
 
     @abstractclassmethod
     def perform(self, **kwargs: Any):

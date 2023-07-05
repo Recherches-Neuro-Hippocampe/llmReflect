@@ -1,6 +1,6 @@
 from llmreflect.Chains.BasicChain import BasicChain
 from llmreflect.Agents.QuestionAgent import PostgresqlQuestionAgent
-from llmreflect.Agents.PostgressqlAgent import PostgresqlAgent
+from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent
 from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever

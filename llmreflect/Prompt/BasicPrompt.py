@@ -15,7 +15,7 @@ import re
 
 PROMPT_BASE_DIR = os.path.join(os.getcwd(),
                                'llmreflect', 'Prompt', 'promptbase')
-INPUT_KEY_TYPE_CHOICE = ['INPUT', 'OUTPUT']
+INPUT_KEY_TYPE_CHOICE = ['INPUT', 'OUTPUT', 'CONTEXT']
 
 
 class BasicPrompt:
@@ -30,8 +30,8 @@ class BasicPrompt:
         are required.
         Args:
             prompt_dict (Dict[str, Any]): In this design,
-            a prompt can be divided into 3 parts,
-            hard rules, soft rule and in-context learning.
+            a prompt can be divided into 4 parts,
+            hard rules, soft rule and in-context learning and format.
             Hard rules indicate the general context for the LLM and
             we usually do not change the hard rules.
             Soft rules are the rules that focus on the refine the
@@ -48,18 +48,17 @@ class BasicPrompt:
 
         """
         self.promptname = promptname
-        self.__valid_prompt_dict(prompt_dict)
         self.prompt_dict = prompt_dict
         self._hard_rules = prompt_dict["HARD"]
         self._soft_rules = prompt_dict["SOFT"]
         self._in_context_learning_list = prompt_dict["INCONTEXT"]
         self._format_dict = prompt_dict["FORMAT"]
-
         self.__assemble__()
         if len(customized_input_list) > 0:
             self.input_list = customized_input_list
         else:
             self.input_list = self.__get_inputs__()
+        self.__valid_prompt_dict(prompt_dict)
         self.prompt_template = PromptTemplate(input_variables=self.input_list,
                                               template=self.string_temp)
 
@@ -161,7 +160,7 @@ class BasicPrompt:
     def hard_rules(self, rule: str):
         self._hard_rules = rule
         self.prompt_dict['HARD'] = self._hard_rules
-        self.__valid_prompt_dict()
+        self.__valid_prompt_dict(self.prompt_dict)
         self.__assemble__()
 
     @property
@@ -172,7 +171,7 @@ class BasicPrompt:
     def soft_rules(self, rule: str):
         self._soft_rules = rule
         self.prompt_dict['SOFT'] = self._soft_rules
-        self.__valid_prompt_dict()
+        self.__valid_prompt_dict(self.prompt_dict)
         self.__assemble__()
 
     @property
@@ -192,7 +191,7 @@ class BasicPrompt:
     def in_context_learning(self, rule: list):
         self._in_context_learning = rule
         self.prompt_dict['INCONTEXT'] = self._in_context_learning
-        self.__valid_prompt_dict()
+        self.__valid_prompt_dict(self.prompt_dict)
         self.__assemble__()
 
     @property
@@ -206,10 +205,10 @@ class BasicPrompt:
         return txt
 
     @input_format.setter
-    def input_format(self, input_format: dict):
-        self._format_dict = input_format
+    def input_format(self, input_format_dict: dict):
+        self._format_dict = input_format_dict
         self.prompt_dict["FORMAT"] = self._format_dict
-        self.__valid_prompt_dict()
+        self.__valid_prompt_dict(self.prompt_dict)
         self.__assemble__()
 
     @property

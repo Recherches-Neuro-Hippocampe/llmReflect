@@ -16,7 +16,7 @@ class PostgresqlQuestionAgent(Agent):
                  max_output_tokens: int = 512,
                  temperature: float = 0.7):
         """
-        Agent class for querying database.
+        Agent for creating questions based on a given database
         Args:
             open_ai_key (str): API key to connect to chatgpt service.
             prompt_name (str, optional): name for the prompt json file.
