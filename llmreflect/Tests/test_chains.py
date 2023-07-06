@@ -87,24 +87,24 @@ def test_self_fix_chain():
     uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
 {config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
     include_tables = [
-            'tb_patient',
-            'tb_patients_allergies',
-            'tb_appointment_patients',
-            'tb_patient_mmse_and_moca_scores',
-            'tb_patient_medications'
-        ]
+        'tb_patient',
+        'tb_patients_allergies',
+        'tb_appointment_patients',
+        'tb_patient_mmse_and_moca_scores',
+        'tb_patient_medications'
+    ]
     open_ai_key = config('OPENAI_API_KEY')
     max_output_tokens = 512
 
     q_ch = DatabaseQuestionChain.from_config(
-            uri=uri,
-            include_tables=include_tables,
-            open_ai_key=open_ai_key,
-            prompt_name="questionpostgresql",
-            max_output_tokens=max_output_tokens,
-            temperature=0.7,
-            sample_rows=0
-        )
+        uri=uri,
+        include_tables=include_tables,
+        open_ai_key=open_ai_key,
+        prompt_name="questionpostgresql",
+        max_output_tokens=max_output_tokens,
+        temperature=0.7,
+        sample_rows=0
+    )
 
     a_ch = DatabaseAnswerChain.from_config(
         uri=uri,
@@ -151,3 +151,31 @@ def test_self_fix_chain():
             message("Fixed summary: " + fixed_summary, color='green')
             assert "error" not in fixed_summary.lower()
             print("======================================\n\n")
+
+
+@pytest.mark.skipif(bool(in_workflow()),
+                    reason="Only test database operations \
+                    in local env")
+def test_answerNfix_chain():
+
+    from llmreflect.Chains.DatabaseChain import DatabaseAnswerNFixChain
+    from decouple import config
+    uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
+{config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
+
+    ch = DatabaseAnswerNFixChain.from_config(
+        uri=uri,
+        include_tables=[
+            'tb_patient',
+            'tb_patients_allergies',
+            'tb_appointment_patients',
+            'tb_patient_mmse_and_moca_scores',
+            'tb_patient_medications'
+        ],
+        open_ai_key=config('OPENAI_API_KEY'),
+        answer_chain_prompt_name="postgresql",
+        fix_chain_prompt_name="postgresqlfix"
+    )
+    result_dict = ch.perform(user_input="give me a list overweight patients")
+    assert len(result_dict['summary']) > 0
+    assert type(result_dict['error']) is list

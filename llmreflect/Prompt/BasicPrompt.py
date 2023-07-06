@@ -146,10 +146,8 @@ class BasicPrompt:
             ],
             "FORMAT": {
 
-            }
-            }
+            }}
         return dict_tmp
-
 
     def save_prompt(self):
         """

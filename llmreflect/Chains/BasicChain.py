@@ -48,7 +48,7 @@ class BasicCombinedChain(ABC):
         self.chains = chains
 
     @abstractclassmethod
-    def from_configs(cls, configs: List):
+    def from_config(cls, **kwargs: Any):
         return
 
     @abstractclassmethod

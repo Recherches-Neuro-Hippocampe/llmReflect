@@ -28,23 +28,23 @@ If there is no limitation, limit the number of returning by {max_present}.
         "table_info": {
             'type': 'INPUT',
             'explanation': 'the information for the database'
-            },
+        },
         "request": {
             'type': 'INPUT',
             'explanation': "user's request",
-            },
+        },
         "history": {
             'type': 'INPUT',
             'explanation': "{dialect} command with error.",
-            },
+        },
         "his_error": {
             'type': 'INPUT',
             'explanation': "Errors reported by the database",
-            },
+        },
         "answer": {
             'type': 'OUTPUT',
             'explanation': "The {dialect} command corrected by you."
-            }
+        }
     }
 }
 

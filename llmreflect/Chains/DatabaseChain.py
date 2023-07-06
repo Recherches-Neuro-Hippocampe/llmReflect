@@ -1,4 +1,3 @@
-from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Chains.BasicChain import BasicChain, BasicCombinedChain
 from llmreflect.Agents.QuestionAgent import PostgresqlQuestionAgent
 from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent, \
@@ -6,9 +5,9 @@ from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent, \
 from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever
-from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever, \
-    BasicRetriever
+from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 from typing import List
+from llmreflect.Utils.message import message
 
 
 class DatabaseQuestionChain(BasicChain):
@@ -304,8 +303,128 @@ class DatabaseSelfFixChain(BasicChain):
 
 
 class DatabaseAnswerNFixChain(BasicCombinedChain):
-    def __init__(self, chains: List[
-        DatabaseAnswerChain,
-        DatabaseSelfFixChain
-    ]):
-        super.__init__(chains=chains)
+    def __init__(self, chains: List[BasicChain], fix_patience: int = 3):
+        super().__init__(chains)
+        assert len(chains) == 2
+        self.fix_patience = fix_patience
+        for chain in self.chains:
+            if chain.__class__ == DatabaseAnswerChain:
+                self.answer_chain = chain
+            elif chain.__class__ == DatabaseSelfFixChain:
+                self.fix_chain = chain
+            else:
+                raise Exception("Illegal chains!")
+
+    @classmethod
+    def from_config(
+            cls,
+            uri: str,
+            include_tables: list,
+            open_ai_key: str,
+            answer_chain_prompt_name: str,
+            fix_chain_prompt_name: str,
+            max_output_tokens: int = 512,
+            temperature: float = 0.0,
+            sample_row: int = 0,
+            max_rows_return: int = 500,
+            fix_patience: int = 3):
+
+        db_a_chain = DatabaseAnswerChain.from_config(
+            uri=uri,
+            include_tables=include_tables,
+            open_ai_key=open_ai_key,
+            prompt_name=answer_chain_prompt_name,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature,
+            sample_rows=sample_row,
+            max_rows_return=max_rows_return
+        )
+        db_fix_chain = DatabaseSelfFixChain.from_config(
+            uri=uri,
+            include_tables=include_tables,
+            open_ai_key=open_ai_key,
+            prompt_name=fix_chain_prompt_name,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature,
+            sample_rows=sample_row,
+            max_rows_return=max_rows_return
+        )
+        return cls(chains=[db_a_chain, db_fix_chain],
+                   fix_patience=fix_patience)
+
+    def perform(self,
+                user_input: str,
+                get_cmd: bool = True,
+                get_db: bool = False,
+                get_summary: bool = True,
+                log_fix: bool = True) -> dict:
+        """_summary_
+
+        Args:
+            user_input (str): _description_
+            get_cmd (bool, optional): _description_. Defaults to True.
+            get_db (bool, optional): _description_. Defaults to False.
+            get_summary (bool, optional): _description_. Defaults to True.
+            log_fix (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            dict: 'cmd': str, sql_cmd,
+                'summary': str, summary,
+                'db': str, db_result,
+                'error': dict, error_logs: 'cmd', what sql cmd caused error,
+                                            'error', what is the error
+        """
+        assert get_cmd or get_db or get_summary
+
+        answer_dict = self.answer_chain.perform(
+            user_input=user_input,
+            get_cmd=True,
+            get_db=get_db,
+            get_summary=True
+        )
+        sql_cmd = answer_dict['cmd']
+        summary = answer_dict['summary']
+        db_result = ""
+        if get_db:
+            db_result = answer_dict['db']
+        fix_attempt = 0
+
+        error_logs = []
+
+        while 'error' in summary.lower() and fix_attempt < self.fix_patience:
+            if log_fix:
+                message(f"Error: {summary}", 'red')
+                message(f"Self-fix Attempt: {fix_attempt}", 'yellow')
+                message("Self-fixing...", 'yellow')
+                error_logs.append({
+                    'cmd': sql_cmd,
+                    'error': summary})
+            fixed_answer_dict = self.fix_chain.perform(
+                user_input=user_input,
+                history=sql_cmd,
+                his_error=summary,
+                get_cmd=True,
+                get_db=get_db,
+                get_summary=True
+            )
+            sql_cmd = fixed_answer_dict['cmd']
+            summary = fixed_answer_dict['summary']
+            if get_db:
+                db_result = fixed_answer_dict['db']
+
+            if 'error' not in summary.lower() and log_fix:
+                message("Self-fix finished.", 'green')
+            fix_attempt += 1
+
+        if 'error' in summary.lower() and log_fix:
+            message("Self-fix failed.", 'red')
+
+        if not get_cmd:
+            sql_cmd = ""
+        if not get_summary:
+            get_summary = ""
+
+        return {'cmd': sql_cmd,
+                'summary': summary,
+                'db': db_result,
+                'error': error_logs}

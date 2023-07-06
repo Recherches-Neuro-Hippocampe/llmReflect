@@ -85,7 +85,8 @@ class PostgresqlAgent(Agent):
         """
         assert get_cmd or get_summary or get_db, "At least get one thing"
         llm_output = self.predict_sql_cmd(user_input=user_input)
-
+        # llm_output = llm_output.replace("tb_", "")
+        # # intentionally causing error for testing
         cmd_n_summary = self.retriever.retrieve_summary(
             llm_output=llm_output,
             return_cmd=True,
