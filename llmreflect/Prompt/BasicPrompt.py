@@ -103,9 +103,12 @@ class BasicPrompt:
         self.string_temp += self.hard_rules
         self.string_temp += "\n\n"
         self.string_temp += self.soft_rules
-        self.string_temp += "\n\n"
-        self.string_temp += "For examples:\n\n"
-        self.string_temp += self.in_context_learning
+
+        if len(self.in_context_learning) > 0:
+            self.string_temp += "\n\n"
+            self.string_temp += "For examples:\n\n"
+            self.string_temp += self.in_context_learning
+
         self.string_temp += "\n\n"
         self.string_temp += "You must use the following format:\n\n"
         self.string_temp += self.input_format
@@ -130,6 +133,23 @@ class BasicPrompt:
         with open(prompt_dir, 'r') as openfile:
             js = json.load(openfile)
         return js
+
+    @classmethod
+    def get_prompt_dict_template(cls):
+        dict_tmp = {
+            "HARD": '''\
+''',
+            "SOFT": '''\
+''',
+            "INCONTEXT": [
+
+            ],
+            "FORMAT": {
+
+            }
+            }
+        return dict_tmp
+
 
     def save_prompt(self):
         """

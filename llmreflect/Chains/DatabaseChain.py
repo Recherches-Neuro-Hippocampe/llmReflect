@@ -1,10 +1,13 @@
-from llmreflect.Chains.BasicChain import BasicChain
+from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.Chains.BasicChain import BasicChain, BasicCombinedChain
 from llmreflect.Agents.QuestionAgent import PostgresqlQuestionAgent
-from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent
+from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent, \
+    PostgresqlSelfFixAgent
 from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever
-from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
+from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever, \
+    BasicRetriever
 from typing import List
 
 
@@ -185,7 +188,21 @@ class DatabaseQnAGradingChain(BasicChain):
                    db_q_chain=db_q_chain,
                    q_batch_size=5)
 
-    def perform(self, n_question: int = 5):
+    def perform(self, n_question: int = 5) -> dict:
+        """_summary_
+
+        Args:
+            n_question (int, optional): _description_. Defaults to 5.
+
+        Returns:
+            dict: {
+                'question': str, question generated,
+                'cmd': str, generated cmd,
+                'summary': str, summary from executing the cmd,
+                'grading': float, scores by grading agent
+                'explanation': str, reasons for such score, str
+            }
+        """
         if n_question <= self.q_batch_size:
             t_questions = self.db_q_chain.perform(n_questions=n_question)
         else:
@@ -219,3 +236,76 @@ class DatabaseQnAGradingChain(BasicChain):
             })
 
         return t_logs
+
+
+class DatabaseSelfFixChain(BasicChain):
+    """
+    A chain class for fixing sql errors
+    Args:
+        BasicChain (_type_): _description_
+    """
+    def __init__(self,
+                 agent: PostgresqlSelfFixAgent,
+                 retriever: DatabaseRetriever):
+        super().__init__(agent, retriever)
+
+    @classmethod
+    def from_config(cls, uri: str,
+                    include_tables: List,
+                    open_ai_key: str,
+                    prompt_name: str = 'postgresqlfix',
+                    max_output_tokens: int = 512,
+                    temperature: float = 0.0,
+                    sample_rows: int = 0,
+                    max_rows_return: int = 500):
+        agent = PostgresqlSelfFixAgent(
+            open_ai_key=open_ai_key,
+            prompt_name=prompt_name,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature)
+
+        retriever = DatabaseRetriever(
+            uri=uri,
+            include_tables=include_tables,
+            max_rows_return=max_rows_return,
+            sample_rows=sample_rows
+        )
+        return cls(agent=agent, retriever=retriever)
+
+    def perform(self,
+                user_input: str,
+                history: str,
+                his_error: str,
+                get_cmd: bool = True,
+                get_db: bool = False,
+                get_summary: bool = True) -> dict:
+        """_summary_
+
+        Args:
+            user_input (str): user's description
+            history (str): history command used for query
+            his_error (str): the errors raised from executing the history cmd
+            get_cmd (bool, optional): if return cmd. Defaults to True.
+            get_db (bool, optional): if return queried db gross result.
+                Defaults to False.
+            get_summary (bool, optional): if return a summary of the result.
+                Defaults to True.
+
+        Returns:
+            dict: {'cmd': sql_cmd, 'summary': summary, 'db': gross db response}
+        """
+        return self.agent.predict_db(
+            user_input=user_input,
+            history=history,
+            his_error=his_error,
+            get_cmd=get_cmd,
+            get_summary=get_summary,
+            get_db=get_db)
+
+
+class DatabaseAnswerNFixChain(BasicCombinedChain):
+    def __init__(self, chains: List[
+        DatabaseAnswerChain,
+        DatabaseSelfFixChain
+    ]):
+        super.__init__(chains=chains)

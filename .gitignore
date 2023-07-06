@@ -10,7 +10,6 @@ __pycache__/
 .vscode/**
 .vscode
 .DS_Store
-main.py
 # Distribution / packaging
 .Python
 build/

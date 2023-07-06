@@ -132,3 +132,111 @@ class PostgresqlAgent(Agent):
             return_cmd=return_cmd,
             split_symbol=self.split_symbol)
         return result
+
+
+class PostgresqlSelfFixAgent(PostgresqlAgent):
+
+    def predict_sql_cmd(self, user_input: str, history: str,
+                        his_error: str) -> str:
+        """
+        Generate the postgresql command, it is a gross output which means
+        no post processing. It could be a wrong format that not executable.
+        Need extraction and cleaning and formatting.
+        Args:
+            user_input (str): users description for the query.
+            history (str): history command used for query
+            his_error (str): the errors raised from executing the history cmd
+        Returns:
+            str: gross output of the llm attempt for generating sql cmd.
+        """
+        llm_output = "Failed, no output from LLM."
+        if self.retriever is None:
+            message("Error: Retriever is not equipped.", color="red")
+        else:
+            llm_output = self.predict(
+                dialect=self.retriever.database_dialect,
+                max_present=self.retriever.max_rows_return,
+                table_info=self.retriever.table_info,
+                request=user_input,
+                history=history,
+                his_error=his_error
+            )
+        return llm_output
+
+    def predict_db(self, user_input: str,
+                   history: str,
+                   his_error: str,
+                   get_cmd: bool = False,
+                   get_summary: bool = False,
+                   get_db: bool = False
+                   ) -> str:
+        """
+        Predict sql cmd based on the user's description then
+        use the langchain method run_no_throw
+        to retrieve sql result.
+        Args:
+            user_input (str): users description for the query.
+            history (str): history command used for query
+            his_error (str): the errors raised from executing the history cmd
+        Returns:
+            str: I know its odd but it is a string. It converts the
+            database cursor result into a string. Not very useful, I dont
+            know why Im keeping this method.
+        """
+        assert get_cmd or get_summary or get_db, "At least get one thing"
+        llm_output = self.predict_sql_cmd(user_input=user_input,
+                                          history=history,
+                                          his_error=his_error)
+
+        cmd_n_summary = self.retriever.retrieve_summary(
+            llm_output=llm_output,
+            return_cmd=True,
+            split_symbol=self.split_symbol)
+
+        cmd = cmd_n_summary['cmd']
+        summary = cmd_n_summary['summary']
+
+        result_dict = {}
+        if get_cmd:
+            result_dict['cmd'] = cmd
+        if get_summary:
+            result_dict['summary'] = summary
+        if get_db:
+            db = self.retriever.retrieve(llm_output=llm_output,
+                                         split_symbol=self.split_symbol)
+            result_dict['db'] = db
+        return result_dict
+
+    def predict_db_summary(self, user_input: str,
+                           history: str,
+                           his_error: str,
+                           return_cmd: bool = False) -> Any:
+        """
+        Predict sql cmd based on the user's description then
+        use the sqlalchemy to retrieve the sql result,
+        then summarize the result into a shorten string.
+        It is used to provide llm context and condense information
+        and save tokens. cheaper better money little
+        Args:
+            user_input (str): user's description for the query
+            history (str): history command used for query
+            his_error (str): the errors raised from executing the history cmd
+            return_cmd (bool, optional):
+            Decide if return the middle step sql cmd.
+            Defaults to False.
+            If true, return a dictionary.
+
+        Returns:
+            str: If the middle step (sql cmd) is not required,
+            return a single string which summarize the query result.
+            Otherwise return a dict.
+            {'cmd': sql_cmd, 'summary': summary}
+        """
+        llm_output = self.predict_sql_cmd(user_input=user_input,
+                                          history=history,
+                                          his_error=his_error)
+        result = self.retriever.retrieve_summary(
+            llm_output=llm_output,
+            return_cmd=return_cmd,
+            split_symbol=self.split_symbol)
+        return result

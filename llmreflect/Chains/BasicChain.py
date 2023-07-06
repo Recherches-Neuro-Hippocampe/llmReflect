@@ -2,7 +2,7 @@ from abc import ABC, abstractclassmethod
 from llmreflect.Retriever.BasicRetriever import BasicRetriever
 from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
-from typing import Any
+from typing import Any, List
 from langchain.llms.openai import OpenAI
 
 
@@ -35,3 +35,22 @@ class BasicChain(ABC):
     def perform(self, **kwargs: Any):
         result = self.agent.predict(kwargs)
         return result
+
+
+class BasicCombinedChain(ABC):
+    '''
+    Abstract class for combined Chain class.
+    A combined chain is a chain with multiple chains
+    A chain class should be the atomic unit for completing a job.
+    A chain object must have the function to perform a job.
+    '''
+    def __init__(self, chains: List[BasicChain]):
+        self.chains = chains
+
+    @abstractclassmethod
+    def from_configs(cls, configs: List):
+        return
+
+    @abstractclassmethod
+    def perform(self, **kwargs: Any):
+        return
