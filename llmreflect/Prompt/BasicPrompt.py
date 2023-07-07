@@ -13,8 +13,7 @@ from llmreflect.Utils.message import message
 import json
 import re
 
-PROMPT_BASE_DIR = os.path.join(os.getcwd(),
-                               'llmreflect', 'Prompt', 'promptbase')
+PROMPT_BASE_DIR = os.path.join(os.path.dirname(__file__), 'promptbase')
 INPUT_KEY_TYPE_CHOICE = ['INPUT', 'OUTPUT', 'CONTEXT']
 
 
