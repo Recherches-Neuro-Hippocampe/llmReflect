@@ -31,11 +31,11 @@ def test_moderate_chain():
         ]
     )
     result = ch.perform(user_input="give me a list of patients",
-                        with_explanation="True")
+                        with_explanation=True)
     assert result['decision']
 
     result = ch.perform(user_input="Cats are the true rulers",
-                        with_explanation="True")
+                        with_explanation=True)
     assert not result['decision']
     assert len(result['explanation']) > 0
 
