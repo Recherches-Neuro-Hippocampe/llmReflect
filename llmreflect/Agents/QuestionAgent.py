@@ -1,11 +1,9 @@
-from llmreflect.Agents.BasicAgent import Agent
-from llmreflect.Prompt.BasicPrompt import BasicPrompt
-from langchain.llms.openai import OpenAI
+from llmreflect.Agents.BasicAgent import OpenAIAgent
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
-class PostgresqlQuestionAgent(Agent):
+class PostgresqlQuestionAgent(OpenAIAgent):
     """
     Agent for creating questions based on a given database
     Args:
@@ -28,12 +26,10 @@ class PostgresqlQuestionAgent(Agent):
                 a high temperature is recommended.
                 Defaults to 0.0.
         """
-        prompt = BasicPrompt.\
-            load_prompt_from_json_file(prompt_name)
-        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
-        llm.max_tokens = max_output_tokens
-        super().__init__(prompt=prompt,
-                         llm=llm)
+        super().__init__(open_ai_key=open_ai_key,
+                         prompt_name=prompt_name,
+                         max_output_tokens=max_output_tokens,
+                         temperature=temperature)
 
     def equip_retriever(self, retriever: DatabaseQuestionRetriever):
         # notice it requires DatabaseQuestionRetriever

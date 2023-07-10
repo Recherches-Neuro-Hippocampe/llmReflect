@@ -31,12 +31,14 @@ class ModerateChain(BasicChain):
                 with_explanation: bool = False) -> Any:
         """
         Overwrite perform function.
-        Generate n questions.
+        Sensor the questions if they are allowed
         Args:
-            n_questions (int, optional): _description_. Defaults to 5.
+            user_input (str): user's natural language request
+            with_explanation (bool): if add explanation
 
         Returns:
-            list: a list of questions, each question is a str object.
+            without explanation: return a boolean variable
+            with explanation: dict: {'decision': bool, 'explanation': str}
         """
         if with_explanation:
             result = self.agent.predict_decision_explained(

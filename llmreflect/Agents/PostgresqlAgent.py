@@ -1,12 +1,10 @@
-from llmreflect.Agents.BasicAgent import Agent
-from langchain.llms.openai import OpenAI
+from llmreflect.Agents.BasicAgent import OpenAIAgent
 from llmreflect.Utils.message import message
 from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
-from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any
 
 
-class PostgresqlAgent(Agent):
+class PostgresqlAgent(OpenAIAgent):
     """
     Agent class for executing postgresql command
     Args:
@@ -28,11 +26,10 @@ class PostgresqlAgent(Agent):
             temperature (float, optional): how consistent the llm performs.
                 The lower the more consistent. Defaults to 0.0.
         """
-        prompt = BasicPrompt.load_prompt_from_json_file(prompt_name)
-        llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
-        llm.max_tokens = max_output_tokens
-        super().__init__(prompt=prompt,
-                         llm=llm)
+        super().__init__(open_ai_key=open_ai_key,
+                         prompt_name=prompt_name,
+                         max_output_tokens=max_output_tokens,
+                         temperature=temperature)
         object.__setattr__(self, 'split_symbol', split_symbol)
 
     def equip_retriever(self, retriever: DatabaseRetriever):

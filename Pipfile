@@ -17,6 +17,7 @@ python-environ = "*"
 pgeocode = "*"
 SQLAlchemy = "*"
 pytest="*"
+pandas="*"
 [dev-packages]
 
 [requires]

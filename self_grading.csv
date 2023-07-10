@@ -1,0 +1,80 @@
+,question,cmd,summary,grading,explanation
+0,"Give me a list of 5 patients with their first name, last name, and address.","
+select ""uuid_patient"", ""patient_first_name"", ""patient_last_name"", ""patient_address""
+from tb_patient
+limit 5;","You retrieved 5 entries with 4 columns from the database.
+The columns are uuid_patient,patient_first_name,patient_last_name,patient_address.
+An example of entries is: 1f5d71c3-b78f-4db3-a072-bc683bb46d5b,patient,1876326345326,None.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which includes the first name, last name, and address of 5 patients. There is no redundant content in the result. The question is straightforward and does not require any logic inference or creativity. Therefore, it receives a perfect score of 10."
+1,How many patients have a potential date set?,"
+select count(*) as ""number_of_patients_with_potential_date""
+from tb_patient
+where ""patient_potential_date"" is not null;","You retrieved 1 entries with 1 columns from the database.
+The columns are number_of_patients_with_potential_date.
+An example of entries is: 173.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which is the count of patients with a potential date set. There is no redundant content in the result. The question is straightforward and does not require any logic inference or creativity. Therefore, it receives a perfect score of 10."
+2,Show me the patients who have a gap in their records.,"
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_gap""
+from tb_patient
+where ""patient_gap"" = true
+limit 500;",Error: Found 0 record! Empty response!,8.5," The query is syntactically correct and can be executed successfully. However, the summary indicates that there are no records found, which means the database did not return the required content. It is possible that there are no patients with a gap in their records in the database. The question is not very complicated and does not require logic inference or creativity. Therefore, the score is slightly lower."
+3,What is the average weight of the patients?,"
+select avg(""patient_weight_in_kg"") as ""average_weight""
+from tb_patient;","You retrieved 1 entries with 1 columns from the database.
+The columns are average_weight.
+An example of entries is: 79.4966865671641791.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which is the average weight of the patients. There is no redundant content in the result. The question is straightforward and does not require any logic inference or creativity. Therefore, it receives a perfect score of 10."
+4,Which patients have a heart rate higher than 100?,"
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_heart_rate""
+from tb_patient
+where ""patient_heart_rate"" > 100
+limit 500;","You retrieved 3 entries with 5 columns from the database.
+The columns are uuid_patient,patient_code,patient_first_name,patient_last_name,patient_heart_rate.
+An example of entries is: 4c266d17-f1f2-4314-8337-0f2b048b4eaa,32757623,alex,reizinger,142.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which is the names and heart rates of patients with a heart rate higher than 100. There is no redundant content in the result. The question is straightforward and does not require any logic inference or creativity. Therefore, it receives a perfect score of 10."
+5,How many patients are there in the database?,"
+select count(*) as ""total_patients""
+from tb_patient;","You retrieved 1 entries with 1 columns from the database.
+The columns are total_patients.
+An example of entries is: 13102.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which is the total number of patients in the database. There is no redundant content in the result. The question is straightforward and does not require any logic inference or creativity. Therefore, it receives a perfect score of 10."
+6,Give me a list of patients who have a patient_weight_in_kg greater than 70.,"
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_weight_in_kg""
+from tb_patient
+where ""patient_weight_in_kg"" > 70
+limit 500;","You retrieved 451 entries with 5 columns from the database.
+The columns are uuid_patient,patient_code,patient_first_name,patient_last_name,patient_weight_in_kg.
+An example of entries is: a8285bce-f4d9-4bb4-8c28-0bfdeb2e35eb,62387638,marie lucille,danis,83.91.",8.5," The query is syntactically correct and can be successfully executed. It retrieves the required content by filtering patients with a weight greater than 70 kg. The summary indicates that it retrieved 451 entries with the correct columns. There is no redundant content. The question is straightforward and does not require any logic inference or creativity. However, the score is slightly reduced because the limit is set to 500, which may not be necessary if there are only 451 entries in total."
+7,"Show me the patients who have a patient_birth_date before 1950 and a patient_gender of ""Female"".","
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_birth_date"", ""patient_gender""
+from tb_patient
+where ""patient_birth_date"" < '1950-01-01'
+and ""patient_gender"" = 'female'
+limit 500;","You retrieved 500 entries with 6 columns from the database.
+The columns are uuid_patient,patient_code,patient_first_name,patient_last_name,patient_birth_date,patient_gender.
+An example of entries is: 7240d91d-503a-4690-b4bf-f617c75fb3eb,25665365,francine,côté,1900-01-01,female.",10.0," The query is syntactically correct and can be successfully executed. After executing, the database returns the required content, which is the patients who have a patient_birth_date before 1950 and a patient_gender of ""Female"". There is no redundant content in the result. The question is not complicated and does not require logic inference or creativity. Therefore, it receives a perfect score of 10."
+8,"List the patients who have a patient_notes containing the word ""Alzheimer's"".","
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_notes""
+from tb_patient
+where ""patient_notes"" ilike '%alzheimer''s%'
+limit 500;",Error: Found 0 record! Empty response!,8.5," The query is syntactically correct and can be executed successfully. It searches for patients whose ""patient_notes"" column contains the word ""Alzheimer's"" using the ilike operator to perform a case-insensitive search. However, it received an empty response, indicating that there are no patients with such notes in the dataset. The query is straightforward and does not require any complex logic or inference. It receives a high score because it satisfies most of the evaluation factors, except for the fact that it does not return any required content."
+9,"Which patients have a patient_how_heard_about_us value of ""Referral""?","
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", ""patient_how_heard_about_us""
+from tb_patient
+where ""patient_how_heard_about_us"" = 'referral'
+limit 500;","You retrieved 1 entries with 5 columns from the database.
+The columns are uuid_patient,patient_code,patient_first_name,patient_last_name,patient_how_heard_about_us.
+An example of entries is: 8419db94-45a4-47e0-b3a2-bc03b7856063,99596487,joana,malette,referral.",8.5," The query is syntactically correct and can be successfully executed. It retrieves the required content by filtering the patients with a ""patient_how_heard_about_us"" value of ""referral"". The result contains the necessary columns. However, the score is slightly reduced because the limit is set to 500, which may not be necessary depending on the size of the dataset."
+10,1. Give me a list of 5 patients who have a potential study and are taking medications.,"
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name"", array_agg(""medication_name"") as ""medication_names""
+from tb_patient
+inner join tb_patient_medications
+on tb_patient.uuid_patient = tb_patient_medications.patient
+where ""patient_potential"" is not null
+and ""medication_name"" is not null
+group by ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name""
+limit 5;","You retrieved 5 entries with 5 columns from the database.
+The columns are uuid_patient,patient_code,patient_first_name,patient_last_name,medication_names.
+An example of entries is: 00253f54-0896-42d1-b86d-90cb15264f40,68909682,sylvie,laurin,['donepezil', 'lorazepam 0.'].",8.5," The command is syntactically correct and can be executed successfully. It retrieves the required content by joining the tb_patient and tb_patient_medications tables and filtering for patients with a potential study and taking medications. The result includes the uuid_patient, patient_code, patient_first_name, patient_last_name, and medication_names columns. However, there is no information provided about the potential study or any specific criteria for selecting the patients, so there may be some redundant content. Additionally, the question is not very complicated and does not require logic inference or creativity, so it does not receive additional score."
+11,2. Show me all patients who have a BMI greater than 25 and are allergic to peanuts.,"
+select ""uuid_patient"", ""patient_code"", ""patient_first_name"", ""patient_last_name""
+from tb_patient
+inner join tb_patients_allergies
+on tb_patient.uuid_patient = tb_patients_allergies.patient
+where ""patient_bmi"" > 25
+and ""allergy_name"" = 'peanuts';",Error: Found 0 record! Empty response!,8.5," The query is syntactically correct and can be executed successfully. However, the summary indicates that there are no records found, which suggests that either there are no patients with a BMI greater than 25 and allergic to peanuts in the database, or there might be an issue with the data. The query correctly joins the patient and patients_allergies tables and filters based on BMI and allergy name. It does not include any redundant content. The question is not overly complicated, as it only requires filtering based on two conditions. There is no logic inference or creativity required. The score is slightly lower due to the empty response, which could indicate a potential issue with the data or the query itself."

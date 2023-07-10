@@ -17,6 +17,40 @@ def in_workflow():
 @pytest.mark.skipif(bool(in_workflow()),
                     reason="Only test database operations \
                     in local env")
+def test_moderate_answer_fix_chain():
+    from llmreflect.Chains.DatabaseChain import \
+        DatabaseModerateNAnswerNFixChain
+    from decouple import config
+
+    uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
+{config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
+
+    ch = DatabaseModerateNAnswerNFixChain.from_config(
+        uri=uri,
+        include_tables=[
+            'tb_patient',
+            'tb_patients_allergies',
+            'tb_appointment_patients',
+            'tb_patient_mmse_and_moca_scores',
+            'tb_patient_medications'
+        ],
+        open_ai_key=config('OPENAI_API_KEY')
+    )
+    result = ch.perform(user_input="give me a list of patients",
+                        explain_moderate=True)
+    print(result)
+    assert result['moderate_decision']
+
+    result = ch.perform(user_input="Cats are the true rulers",
+                        explain_moderate=True)
+    assert not result['moderate_decision']
+    assert len(result['moderate_explanation']) > 0
+    print(result)
+
+
+@pytest.mark.skipif(bool(in_workflow()),
+                    reason="Only test database operations \
+                    in local env")
 def test_moderate_chain():
     from llmreflect.Chains.ModerateChain import ModerateChain
     from decouple import config
@@ -44,9 +78,13 @@ def test_moderate_chain():
                     reason="Only test database operations \
                     in local env")
 def test_grading_chain():
-
     from llmreflect.Chains.DatabaseChain import DatabaseQnAGradingChain
     from decouple import config
+    import pandas as pd
+
+    SAVE_LOG = False
+    N_QUESTIONS = 12
+
     uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
 {config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
 
@@ -59,21 +97,27 @@ def test_grading_chain():
             'tb_patient_mmse_and_moca_scores',
             'tb_patient_medications'
         ],
+        a_max_output_tokens=512,
+        g_max_output_tokens=256,
         open_ai_key=config('OPENAI_API_KEY')
     )
-    logs = ch.perform(n_question=5)
-    for log in logs:
-        message("Question: " + log["question"], 'blue')
-        message("Query: " + log["cmd"], 'yellow')
-        message("Summary: " + log["summary"], "green")
-        message("Score: %.2f" % log["grading"], 'yellow')
-        message("Explain: " + log["explanation"], "green")
-        assert len(log["question"]) > 0
-        assert len(log["cmd"]) > 0
-        assert len(log["summary"]) > 0
-        assert len(log["explanation"]) > 0
-        assert log["grading"] > 0
-        print("=========================\n\n")
+    logs = ch.perform(n_question=N_QUESTIONS)
+    if SAVE_LOG:
+        df = pd.DataFrame.from_records(logs)
+        df.to_csv("self_grading.csv")
+    else:
+        for log in logs:
+            message("Question: " + log["question"], 'blue')
+            message("Query: " + log["cmd"], 'yellow')
+            message("Summary: " + log["summary"], "green")
+            message("Score: %.2f" % log["grading"], 'yellow')
+            message("Explain: " + log["explanation"], "green")
+            assert len(log["question"]) > 0
+            assert len(log["cmd"]) > 0
+            assert len(log["summary"]) > 0
+            assert len(log["explanation"]) > 0
+            assert log["grading"] > 0
+            print("=========================\n\n")
 
 
 @pytest.mark.skipif(bool(in_workflow()),

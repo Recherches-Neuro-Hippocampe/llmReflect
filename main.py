@@ -26,6 +26,3 @@ in their birth date',
 )
 bp.in_context_learning = inconext_list
 bp.save_prompt()
-
-bp = BasicPrompt.load_prompt_from_json_file("moderatepostgresql")
-print(bp.in_context_learning)
