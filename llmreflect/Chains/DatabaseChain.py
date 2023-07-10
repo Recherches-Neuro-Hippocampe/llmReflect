@@ -588,7 +588,8 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
             user_input=user_input,
             get_cmd=True,
             get_db=get_db,
-            get_summary=True
+            get_summary=True,
+            log_fix=log_fix
         )
 
         return {'cmd': answer_dict['cmd'],
