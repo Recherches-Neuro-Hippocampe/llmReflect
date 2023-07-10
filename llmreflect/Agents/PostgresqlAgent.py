@@ -1,5 +1,5 @@
 from llmreflect.Agents.BasicAgent import OpenAIAgent
-from llmreflect.Utils.message import message
+from llmreflect.Utils.log import LOGGER
 from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from typing import Any
 
@@ -53,7 +53,7 @@ class PostgresqlAgent(OpenAIAgent):
         """
         llm_output = "Failed, no output from LLM."
         if self.retriever is None:
-            message("Error: Retriever is not equipped.", color="red")
+            LOGGER.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
                 dialect=self.retriever.database_dialect,
@@ -61,6 +61,7 @@ class PostgresqlAgent(OpenAIAgent):
                 table_info=self.retriever.table_info,
                 request=user_input
             )
+            LOGGER.debug(llm_output)
         return llm_output
 
     def predict_db(self, user_input: str,
@@ -149,7 +150,7 @@ class PostgresqlSelfFixAgent(PostgresqlAgent):
         """
         llm_output = "Failed, no output from LLM."
         if self.retriever is None:
-            message("Error: Retriever is not equipped.", color="red")
+            LOGGER.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
                 dialect=self.retriever.database_dialect,
@@ -159,6 +160,7 @@ class PostgresqlSelfFixAgent(PostgresqlAgent):
                 history=history,
                 his_error=his_error
             )
+            LOGGER.debug(llm_output)
         return llm_output
 
     def predict_db(self, user_input: str,

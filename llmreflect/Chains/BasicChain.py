@@ -4,6 +4,8 @@ from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any, List
 from langchain.llms.openai import OpenAI
+from langchain.callbacks import get_openai_callback
+from llmreflect.Utils.log import LOGGER, openai_cb_2_str
 
 
 class BasicChain(ABC):
@@ -36,6 +38,12 @@ class BasicChain(ABC):
         result = self.agent.predict(kwargs)
         return result
 
+    def perform_cost_monitor(self, **kwargs: Any):
+        with get_openai_callback() as cb:
+            result = self.perform(**kwargs)
+        LOGGER.info(openai_cb_2_str(cb))
+        return result, cb
+
 
 class BasicCombinedChain(ABC):
     '''
@@ -54,3 +62,9 @@ class BasicCombinedChain(ABC):
     @abstractclassmethod
     def perform(self, **kwargs: Any):
         return
+
+    def perform_cost_monitor(self, **kwargs: Any):
+        with get_openai_callback() as cb:
+            result = self.perform(**kwargs)
+        LOGGER.info(openai_cb_2_str(cb))
+        return result, cb

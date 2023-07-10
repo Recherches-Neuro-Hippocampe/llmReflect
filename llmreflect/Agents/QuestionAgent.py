@@ -1,5 +1,5 @@
 from llmreflect.Agents.BasicAgent import OpenAIAgent
-from llmreflect.Utils.message import message
+from llmreflect.Utils.log import LOGGER
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
@@ -47,11 +47,12 @@ class PostgresqlQuestionAgent(OpenAIAgent):
         """
         result = "Failed, no output from LLM."
         if self.retriever is None:
-            message("Error: Retriever is not equipped.", color="red")
+            LOGGER.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
                 table_info=self.retriever.table_info,
                 n_questions=n_questions
             )
+            LOGGER.debug(llm_output)
             result = self.retriever.retrieve(llm_output)
         return result

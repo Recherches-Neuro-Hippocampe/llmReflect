@@ -9,7 +9,7 @@ the major part that Agents can tune.
 from typing import Dict, Any
 from langchain.prompts.prompt import PromptTemplate
 import os
-from llmreflect.Utils.message import message
+from llmreflect.Utils.log import LOGGER
 import json
 import re
 
@@ -120,8 +120,7 @@ class BasicPrompt:
     @classmethod
     def load_prompt_from_json_file(cls, promptname: str):
         js = cls._load_json_file(promptname=promptname)
-        message(msg=f"{promptname} prompt loaded successfully!",
-                color="green")
+        LOGGER.info(f"{promptname} prompt loaded successfully!")
 
         return cls(prompt_dict=js, promptname=promptname)
 
@@ -155,15 +154,14 @@ class BasicPrompt:
         try:
             self.__valid_prompt_dict(self.prompt_dict)
         except Exception:
-            message(msg="Prompt dictionary format is illegal!", color="red")
+            LOGGER.error("Prompt dictionary format is illegal!")
             return
 
         saving_dir = os.path.join(PROMPT_BASE_DIR, f"{self.promptname}.json")
         with open(saving_dir, 'w') as writefile:
             json.dump(self.prompt_dict, writefile)
 
-        message(msg=f"{self.promptname} has been dumped into {saving_dir}",
-                color="green")
+        LOGGER.info(f"{self.promptname} has been dumped into {saving_dir}")
 
     @classmethod
     def wrap_key_name(cls, key_name):

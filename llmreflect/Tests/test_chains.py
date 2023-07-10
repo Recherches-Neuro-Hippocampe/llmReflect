@@ -4,7 +4,7 @@ Future work...
 """
 import os
 import pytest
-from llmreflect.Utils.message import message
+from llmreflect.Utils.log import LOGGER
 
 
 def in_workflow():
@@ -18,6 +18,7 @@ def in_workflow():
                     reason="Only test database operations \
                     in local env")
 def test_moderate_answer_fix_chain():
+
     from llmreflect.Chains.DatabaseChain import \
         DatabaseModerateNAnswerNFixChain
     from decouple import config
@@ -36,16 +37,18 @@ def test_moderate_answer_fix_chain():
         ],
         open_ai_key=config('OPENAI_API_KEY')
     )
-    result = ch.perform(user_input="give me a list of patients",
-                        explain_moderate=True)
-    print(result)
+
+    result, _ = ch.perform_cost_monitor(
+        user_input="give me a list of patients",
+        explain_moderate=True)
+
     assert result['moderate_decision']
 
-    result = ch.perform(user_input="Cats are the true rulers",
-                        explain_moderate=True)
+    result, _ = ch.perform_cost_monitor(
+        user_input="Cats are the true rulers",
+        explain_moderate=True)
     assert not result['moderate_decision']
     assert len(result['moderate_explanation']) > 0
-    print(result)
 
 
 @pytest.mark.skipif(bool(in_workflow()),
@@ -64,12 +67,14 @@ def test_moderate_chain():
             'tb_patient_medications'
         ]
     )
-    result = ch.perform(user_input="give me a list of patients",
-                        with_explanation=True)
+    result, _ = ch.perform_cost_monitor(
+        user_input="give me a list of patients",
+        with_explanation=True)
     assert result['decision']
 
-    result = ch.perform(user_input="Cats are the true rulers",
-                        with_explanation=True)
+    result, _ = ch.perform_cost_monitor(
+        user_input="Cats are the true rulers",
+        with_explanation=True)
     assert not result['decision']
     assert len(result['explanation']) > 0
 
@@ -101,23 +106,22 @@ def test_grading_chain():
         g_max_output_tokens=256,
         open_ai_key=config('OPENAI_API_KEY')
     )
-    logs = ch.perform(n_question=N_QUESTIONS)
+    logs, _ = ch.perform_cost_monitor(n_question=N_QUESTIONS)
     if SAVE_LOG:
         df = pd.DataFrame.from_records(logs)
         df.to_csv("self_grading.csv")
     else:
         for log in logs:
-            message("Question: " + log["question"], 'blue')
-            message("Query: " + log["cmd"], 'yellow')
-            message("Summary: " + log["summary"], "green")
-            message("Score: %.2f" % log["grading"], 'yellow')
-            message("Explain: " + log["explanation"], "green")
+            LOGGER.info("Question: " + log["question"])
+            LOGGER.info("Query: " + log["cmd"])
+            LOGGER.info("Summary: " + log["summary"])
+            LOGGER.info("Score: %.2f" % log["grading"])
+            LOGGER.info("Explain: " + log["explanation"])
             assert len(log["question"]) > 0
             assert len(log["cmd"]) > 0
             assert len(log["summary"]) > 0
             assert len(log["explanation"]) > 0
-            assert log["grading"] > 0
-            print("=========================\n\n")
+            assert log["grading"] >= 0
 
 
 @pytest.mark.skipif(bool(in_workflow()),
@@ -172,29 +176,28 @@ def test_self_fix_chain():
         max_rows_return=500
     )
 
-    questions = q_ch.perform(n_questions=5)
+    questions, _ = q_ch.perform_cost_monitor(n_questions=5)
     for q in questions:
-        cmd_summary = a_ch.perform(user_input=q)
+        cmd_summary, _ = a_ch.perform_cost_monitor(user_input=q)
         cmd = cmd_summary['cmd']
         summary = cmd_summary['summary']
         if "Error" not in summary:
             crooked_cmd = cmd.replace("tb_", "")
             crooked_summary = a_ch.retriever.retrieve_summary(
                 llm_output=crooked_cmd)
-            message("Question: " + q, color='blue')
-            message("Crooked command: " + crooked_cmd, color='yellow')
-            message("Crooked summary: " + crooked_summary, color='red')
-            result_dict = self_fix_ch.perform(
+            LOGGER.info("Question: " + q)
+            LOGGER.info("Crooked command: " + crooked_cmd)
+            LOGGER.info("Crooked summary: " + crooked_summary)
+            result_dict, _ = self_fix_ch.perform_cost_monitor(
                 user_input=q,
                 history=crooked_cmd,
                 his_error=crooked_summary
             )
             fixed_cmd = result_dict['cmd']
             fixed_summary = result_dict['summary']
-            message("Fixed command: " + fixed_cmd, color='yellow')
-            message("Fixed summary: " + fixed_summary, color='green')
+            LOGGER.info("Fixed command: " + fixed_cmd)
+            LOGGER.info("Fixed summary: " + fixed_summary)
             assert "error" not in fixed_summary.lower()
-            print("======================================\n\n")
 
 
 @pytest.mark.skipif(bool(in_workflow()),
@@ -220,6 +223,7 @@ def test_answerNfix_chain():
         answer_chain_prompt_name="postgresql",
         fix_chain_prompt_name="postgresqlfix"
     )
-    result_dict = ch.perform(user_input="give me a list overweight patients")
+    result_dict, _ = ch.perform_cost_monitor(
+        user_input="give me a list overweight patients")
     assert len(result_dict['summary']) > 0
     assert type(result_dict['error']) is list

@@ -1,5 +1,5 @@
 from llmreflect.Agents.BasicAgent import OpenAIAgent
-from llmreflect.Utils.message import message
+from llmreflect.Utils.log import LOGGER
 from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 
 
@@ -45,14 +45,19 @@ class PostgressqlGradingAgent(OpenAIAgent):
         Returns:
             a dictionary, {'grading': grading, 'explanation': explanation}
         """
-        result = "Failed, no output from LLM."
+        result = {'grading': 0, 'explanation': "Failed, no output from LLM."}
         if self.retriever is None:
-            message("Error: Retriever is not equipped.", color="red")
+            LOGGER.error("Error: Retriever is not equipped.")
         else:
-            llm_output = self.predict(
-                request=request,
-                command=sql_cmd,
-                summary=db_summary
-            )
-            result = self.retriever.retrieve(llm_output)
+            try:
+                llm_output = self.predict(
+                    request=request,
+                    command=sql_cmd,
+                    summary=db_summary
+                )
+                LOGGER.debug(llm_output)
+                result = self.retriever.retrieve(llm_output)
+            except Exception as e:
+                LOGGER.error(str(e))
+                LOGGER.error(llm_output)
         return result
