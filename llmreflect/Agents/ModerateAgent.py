@@ -1,5 +1,4 @@
 from llmreflect.Agents.BasicAgent import OpenAIAgent
-from llmreflect.Utils.log import LOGGER
 from llmreflect.Retriever.BasicRetriever import \
     BasicQuestionModerateRetriever
 
@@ -47,13 +46,14 @@ class PostgresqlModerateAgent(OpenAIAgent):
         """
         result = "Failed, no output from LLM."
         if self.retriever is None:
-            LOGGER.error("Error: Retriever is not equipped.")
+            self.logger.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
                 topic="patient data",
                 included_tables=self.retriever.include_tables,
                 request=user_input
             )
+            self.logger.debug(llm_output)
             result = self.retriever.retrieve(llm_output)['decision']
         return result
 
@@ -68,13 +68,14 @@ class PostgresqlModerateAgent(OpenAIAgent):
         """
         result = "Failed, no output from LLM."
         if self.retriever is None:
-            LOGGER.error("Error: Retriever is not equipped.")
+            self.logger.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
                 topic="patient data",
                 included_tables=self.retriever.include_tables,
                 request=user_input
             )
+            self.logger.debug(llm_output)
             result = self.retriever.retrieve(llm_output,
                                              explanation=True)
         return result

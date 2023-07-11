@@ -5,7 +5,7 @@ from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any, List
 from langchain.llms.openai import OpenAI
 from langchain.callbacks import get_openai_callback
-from llmreflect.Utils.log import LOGGER, openai_cb_2_str
+from llmreflect.Utils.log import get_logger, openai_cb_2_str
 
 
 class BasicChain(ABC):
@@ -20,6 +20,7 @@ class BasicChain(ABC):
         self.agent = agent
         self.retriever = retriever
         self.agent.equip_retriever(self.retriever)
+        self.logger = get_logger(self.__class__.__name__)
 
     @abstractclassmethod
     def from_config(cls,
@@ -41,7 +42,7 @@ class BasicChain(ABC):
     def perform_cost_monitor(self, **kwargs: Any):
         with get_openai_callback() as cb:
             result = self.perform(**kwargs)
-        LOGGER.info(openai_cb_2_str(cb))
+        self.logger.cost(openai_cb_2_str(cb))
         return result, cb
 
 
@@ -54,6 +55,7 @@ class BasicCombinedChain(ABC):
     '''
     def __init__(self, chains: List[BasicChain]):
         self.chains = chains
+        self.logger = get_logger(self.__class__.__name__)
 
     @abstractclassmethod
     def from_config(cls, **kwargs: Any):
@@ -66,5 +68,5 @@ class BasicCombinedChain(ABC):
     def perform_cost_monitor(self, **kwargs: Any):
         with get_openai_callback() as cb:
             result = self.perform(**kwargs)
-        LOGGER.info(openai_cb_2_str(cb))
+        self.logger.cost(openai_cb_2_str(cb))
         return result, cb

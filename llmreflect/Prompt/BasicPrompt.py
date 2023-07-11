@@ -9,7 +9,7 @@ the major part that Agents can tune.
 from typing import Dict, Any
 from langchain.prompts.prompt import PromptTemplate
 import os
-from llmreflect.Utils.log import LOGGER
+from llmreflect.Utils.log import get_logger
 import json
 import re
 
@@ -17,10 +17,12 @@ PROMPT_BASE_DIR = os.path.join(os.path.dirname(__file__), 'promptbase')
 INPUT_KEY_TYPE_CHOICE = ['INPUT', 'OUTPUT', 'CONTEXT']
 
 
-class BasicPrompt:
+class BasicPrompt(object):
     """
     Mighty mother of all prompts (In this repo I mean)
     """
+    logger = get_logger("Default Prompt")
+
     def __init__(self, prompt_dict: Dict[str, Any], promptname: str,
                  customized_input_list: list = []) -> None:
         """
@@ -120,7 +122,7 @@ class BasicPrompt:
     @classmethod
     def load_prompt_from_json_file(cls, promptname: str):
         js = cls._load_json_file(promptname=promptname)
-        LOGGER.info(f"{promptname} prompt loaded successfully!")
+        cls.logger.info(f"{promptname} prompt loaded successfully!")
 
         return cls(prompt_dict=js, promptname=promptname)
 
@@ -154,14 +156,15 @@ class BasicPrompt:
         try:
             self.__valid_prompt_dict(self.prompt_dict)
         except Exception:
-            LOGGER.error("Prompt dictionary format is illegal!")
+            self.logger.error("Prompt dictionary format is illegal!")
             return
 
         saving_dir = os.path.join(PROMPT_BASE_DIR, f"{self.promptname}.json")
         with open(saving_dir, 'w') as writefile:
             json.dump(self.prompt_dict, writefile)
 
-        LOGGER.info(f"{self.promptname} has been dumped into {saving_dir}")
+        self.logger.info(
+            f"{self.promptname} has been dumped into {saving_dir}")
 
     @classmethod
     def wrap_key_name(cls, key_name):

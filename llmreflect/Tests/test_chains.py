@@ -4,7 +4,9 @@ Future work...
 """
 import os
 import pytest
-from llmreflect.Utils.log import LOGGER
+from llmreflect.Utils.log import get_logger
+
+LOGGER = get_logger("test")
 
 
 def in_workflow():

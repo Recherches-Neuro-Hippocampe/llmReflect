@@ -5,6 +5,7 @@ from abc import ABC, abstractclassmethod
 from llmreflect.Retriever.BasicRetriever import BasicRetriever
 from dataclasses import dataclass
 from langchain.chat_models import ChatOpenAI
+from llmreflect.Utils.log import get_logger
 
 
 @dataclass
@@ -49,6 +50,7 @@ class Agent(LLMChain, ABC):
                          llm=llm)
         # Agent class inherit from the LLM chain class
         object.__setattr__(self, 'retriever', None)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
 
     @abstractclassmethod
     def equip_retriever(self, retriever: BasicRetriever):

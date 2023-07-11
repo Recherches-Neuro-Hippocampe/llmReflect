@@ -8,7 +8,6 @@ from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
 from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
 from llmreflect.Chains.ModerateChain import ModerateChain
 from typing import List
-from llmreflect.Utils.log import LOGGER
 
 
 class DatabaseQuestionChain(BasicChain):
@@ -384,9 +383,9 @@ class DatabaseAnswerNFixChain(BasicCombinedChain):
 
         while 'error' in summary.lower() and fix_attempt < self.fix_patience:
             if log_fix:
-                LOGGER.warning(f"Error detected: {summary}")
-                LOGGER.warning(f"Self-fix Attempt: {fix_attempt}")
-                LOGGER.warning("Self-fixing...")
+                self.logger.warning(f"Error detected: {summary}")
+                self.logger.warning(f"Self-fix Attempt: {fix_attempt}")
+                self.logger.warning("Self-fixing...")
                 error_logs.append({
                     'cmd': sql_cmd,
                     'error': summary})
@@ -404,11 +403,11 @@ class DatabaseAnswerNFixChain(BasicCombinedChain):
                 db_result = fixed_answer_dict['db']
 
             if 'error' not in summary.lower() and log_fix:
-                LOGGER.info("Self-fix finished.")
+                self.logger.info("Self-fix finished.")
             fix_attempt += 1
 
         if 'error' in summary.lower() and log_fix:
-            LOGGER.error("Self-fix failed!")
+            self.logger.error("Self-fix failed!")
 
         if not get_cmd:
             sql_cmd = ""
