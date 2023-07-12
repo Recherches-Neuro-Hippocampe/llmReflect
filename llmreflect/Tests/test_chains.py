@@ -4,7 +4,7 @@ Future work...
 """
 import os
 import pytest
-from llmreflect.Utils.log import get_logger
+from llmreflect.Utils.log import get_logger, traces_2_str
 
 LOGGER = get_logger("test")
 
@@ -40,15 +40,16 @@ def test_moderate_answer_fix_chain():
         open_ai_key=config('OPENAI_API_KEY')
     )
 
-    result, _ = ch.perform_cost_monitor(
+    result, traces = ch.perform_cost_monitor(
         user_input="give me a list of patients",
         explain_moderate=True)
-
+    LOGGER.debug(traces_2_str(traces))
     assert result['moderate_decision']
 
-    result, _ = ch.perform_cost_monitor(
+    result, traces = ch.perform_cost_monitor(
         user_input="Cats are the true rulers",
         explain_moderate=True)
+    LOGGER.debug(traces_2_str(traces))
     assert not result['moderate_decision']
     assert len(result['moderate_explanation']) > 0
 
@@ -69,14 +70,16 @@ def test_moderate_chain():
             'tb_patient_medications'
         ]
     )
-    result, _ = ch.perform_cost_monitor(
+    result, traces = ch.perform_cost_monitor(
         user_input="give me a list of patients",
         with_explanation=True)
     assert result['decision']
+    LOGGER.debug(traces_2_str(traces))
 
-    result, _ = ch.perform_cost_monitor(
+    result, traces = ch.perform_cost_monitor(
         user_input="Cats are the true rulers",
         with_explanation=True)
+    LOGGER.debug(traces_2_str(traces))
     assert not result['decision']
     assert len(result['explanation']) > 0
 
@@ -108,7 +111,7 @@ def test_grading_chain():
         g_max_output_tokens=256,
         open_ai_key=config('OPENAI_API_KEY')
     )
-    logs, _ = ch.perform_cost_monitor(n_question=N_QUESTIONS)
+    logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS)
     if SAVE_LOG:
         df = pd.DataFrame.from_records(logs)
         df.to_csv("self_grading.csv")
@@ -124,6 +127,7 @@ def test_grading_chain():
             assert len(log["summary"]) > 0
             assert len(log["explanation"]) > 0
             assert log["grading"] >= 0
+    LOGGER.debug(traces_2_str(traces))
 
 
 @pytest.mark.skipif(bool(in_workflow()),
@@ -178,9 +182,12 @@ def test_self_fix_chain():
         max_rows_return=500
     )
 
-    questions, _ = q_ch.perform_cost_monitor(n_questions=5)
+    questions, traces = q_ch.perform_cost_monitor(n_questions=5)
+    LOGGER.debug(traces_2_str(traces))
+
     for q in questions:
-        cmd_summary, _ = a_ch.perform_cost_monitor(user_input=q)
+        cmd_summary, traces = a_ch.perform_cost_monitor(user_input=q)
+        LOGGER.debug(traces_2_str(traces))
         cmd = cmd_summary['cmd']
         summary = cmd_summary['summary']
         if "Error" not in summary:
@@ -190,7 +197,7 @@ def test_self_fix_chain():
             LOGGER.info("Question: " + q)
             LOGGER.info("Crooked command: " + crooked_cmd)
             LOGGER.info("Crooked summary: " + crooked_summary)
-            result_dict, _ = self_fix_ch.perform_cost_monitor(
+            result_dict, traces = self_fix_ch.perform_cost_monitor(
                 user_input=q,
                 history=crooked_cmd,
                 his_error=crooked_summary
@@ -200,6 +207,8 @@ def test_self_fix_chain():
             LOGGER.info("Fixed command: " + fixed_cmd)
             LOGGER.info("Fixed summary: " + fixed_summary)
             assert "error" not in fixed_summary.lower()
+
+            LOGGER.debug(traces_2_str(traces))
 
 
 @pytest.mark.skipif(bool(in_workflow()),
@@ -225,7 +234,8 @@ def test_answerNfix_chain():
         answer_chain_prompt_name="postgresql",
         fix_chain_prompt_name="postgresqlfix"
     )
-    result_dict, _ = ch.perform_cost_monitor(
+    result_dict, traces = ch.perform_cost_monitor(
         user_input="give me a list overweight patients")
     assert len(result_dict['summary']) > 0
     assert type(result_dict['error']) is list
+    LOGGER.debug(traces_2_str(traces))

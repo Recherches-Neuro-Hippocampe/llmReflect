@@ -4,8 +4,8 @@ from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any, List
 from langchain.llms.openai import OpenAI
-from langchain.callbacks import get_openai_callback
 from llmreflect.Utils.log import get_logger, openai_cb_2_str
+from llmreflect.Utils.log import get_openai_tracer
 
 
 class BasicChain(ABC):
@@ -17,10 +17,10 @@ class BasicChain(ABC):
     A chain object must have the function to perform a job.
     '''
     def __init__(self, agent: Agent, retriever: BasicRetriever):
-        self.agent = agent
-        self.retriever = retriever
+        object.__setattr__(self, 'agent', agent)
+        object.__setattr__(self, 'retriever', retriever)
         self.agent.equip_retriever(self.retriever)
-        self.logger = get_logger(self.__class__.__name__)
+        object.__setattr__(self, 'logger', get_logger(self.__class__.__name__))
 
     @abstractclassmethod
     def from_config(cls,
@@ -40,7 +40,7 @@ class BasicChain(ABC):
         return result
 
     def perform_cost_monitor(self, **kwargs: Any):
-        with get_openai_callback() as cb:
+        with get_openai_tracer(id=self.__class__.__name__) as cb:
             result = self.perform(**kwargs)
         self.logger.cost(openai_cb_2_str(cb))
         return result, cb
@@ -54,8 +54,8 @@ class BasicCombinedChain(ABC):
     A chain object must have the function to perform a job.
     '''
     def __init__(self, chains: List[BasicChain]):
-        self.chains = chains
-        self.logger = get_logger(self.__class__.__name__)
+        object.__setattr__(self, "chains", chains)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
 
     @abstractclassmethod
     def from_config(cls, **kwargs: Any):
@@ -66,7 +66,7 @@ class BasicCombinedChain(ABC):
         return
 
     def perform_cost_monitor(self, **kwargs: Any):
-        with get_openai_callback() as cb:
+        with get_openai_tracer(id=self.__class__.__name__) as cb:
             result = self.perform(**kwargs)
         self.logger.cost(openai_cb_2_str(cb))
         return result, cb

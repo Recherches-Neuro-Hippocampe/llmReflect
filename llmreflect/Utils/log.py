@@ -1,6 +1,97 @@
 import logging
 import os
 import shutil
+from langchain.callbacks import OpenAICallbackHandler
+from langchain.callbacks.openai_info import standardize_model_name
+from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
+from langchain.callbacks.openai_info import get_openai_token_cost_for_model
+from typing import Dict, Any, List, Generator, Optional
+from langchain.schema import LLMResult
+from contextlib import contextmanager
+from contextvars import ContextVar
+
+
+class OpenAITracer(OpenAICallbackHandler):
+    def __init__(self, id: str = "") -> None:
+        super().__init__()
+        self.traces = []
+        self.id = id
+        print(f"Tracer initialized for: {self.id}")
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> None:
+        """Print out the prompts."""
+        self.cur_trace = LLMTRACE(input=prompts[0])
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        """Collect token usage."""
+        if response.llm_output is None:
+            return None
+        else:
+            self.cur_trace.output = response.llm_output
+        self.successful_requests += 1
+
+        if "token_usage" not in response.llm_output:
+            return None
+        token_usage = response.llm_output["token_usage"]
+
+        self.cur_trace.completion_tokens = token_usage.get(
+            "completion_tokens", 0)
+        self.cur_trace.prompt_tokens = token_usage.get("prompt_tokens", 0)
+        self.cur_trace.model_name = standardize_model_name(
+            response.llm_output.get("model_name", ""))
+        if self.cur_trace.model_name in MODEL_COST_PER_1K_TOKENS:
+            self.cur_trace.completion_cost = get_openai_token_cost_for_model(
+                self.cur_trace.model_name,
+                self.cur_trace.completion_tokens,
+                is_completion=True
+            )
+            self.cur_trace.prompt_cost = get_openai_token_cost_for_model(
+                self.cur_trace.model_name,
+                self.cur_trace.prompt_tokens)
+            self.cur_trace.total_cost = self.cur_trace.prompt_cost + \
+                self.cur_trace.completion_cost
+        self.cur_trace.total_tokens = token_usage.get("total_tokens", 0)
+        self.total_tokens += self.cur_trace.total_tokens
+        self.total_cost += self.cur_trace.total_cost
+        self.traces.append(self.cur_trace)
+
+
+class LLMTRACE:
+    def __init__(
+            self,
+            input: str = "",
+            output: str = "",
+            completion_tokens: int = 0,
+            prompt_tokens: int = 0,
+            model_name: str = "",
+            completion_cost: float = 0.,
+            prompt_cost: float = 0.,
+    ) -> None:
+        self.input = input
+        self.output = output
+        self.completion_tokens = completion_tokens
+        self.prompt_tokens = prompt_tokens
+        self.model_name = model_name
+        self.completion_cost = completion_cost
+        self.prompt_cost = prompt_cost
+        self.total_cost = prompt_cost + completion_cost
+        self.total_tokens = prompt_tokens + completion_tokens
+
+
+openai_trace_var: ContextVar[Optional[OpenAITracer]] = ContextVar(
+    "openai_trace", default=None
+)
+
+
+@contextmanager
+def get_openai_tracer(id: str = "") -> Generator[OpenAITracer, None, None]:
+    """Get OpenAI callback handler in a context manager."""
+    cb = OpenAITracer(id=id)
+    openai_trace_var.set(cb)
+    yield cb
+    openai_trace_var.set(None)
 
 
 class CustomFormatter(logging.Formatter):
@@ -162,14 +253,29 @@ def message(msg, color=None):
     print(f'{COLORS[color]}{msg}{COLORS["reset"]}')
 
 
-def openai_cb_2_str(cb) -> str:
+def openai_cb_2_str(cb: OpenAITracer) -> str:
     tmp_str = ""
     tmp_str += f"[Total Tokens] {cb.total_tokens}, "
-    tmp_str += f"[Prompt Tokens] {cb.prompt_tokens}, "
-    tmp_str += f"[Completion Tokens] {cb.completion_tokens}, "
     tmp_str += f"[Successful Requests] {cb.successful_requests}, "
     tmp_str += f"[Total Cost (USD) $] {cb.total_cost}"
     return tmp_str
+
+
+def traces_2_str(cb: OpenAITracer) -> str:
+    total_str = "\n"
+    for trace in cb.traces:
+        tmp_str = ""
+        tmp_str += f"[Model Name] {trace.model_name}\n"
+        tmp_str += f"[Brief Input] {trace.input[0:100]}\n"
+        tmp_str += f"[Total Tokens] {trace.total_tokens}\n"
+        tmp_str += f"[Completion Tokens] {trace.completion_tokens}\n"
+        tmp_str += f"[Prompt Tokens] {trace.prompt_tokens}\n"
+        tmp_str += f"[Completion Cost] {trace.completion_cost}\n"
+        tmp_str += f"[Prompt Cost] {trace.prompt_cost}\n"
+        tmp_str += f"[Total Cost] {trace.total_cost}\n"
+        tmp_str += "====================================\n\n"
+        total_str += tmp_str
+    return total_str
 
 
 addLoggingLevel("COST", 25)

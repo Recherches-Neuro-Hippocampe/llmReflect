@@ -1,3 +1,4 @@
+from typing import Any
 from langchain.chains import LLMChain
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from langchain.base_language import BaseLanguageModel
@@ -6,6 +7,7 @@ from llmreflect.Retriever.BasicRetriever import BasicRetriever
 from dataclasses import dataclass
 from langchain.chat_models import ChatOpenAI
 from llmreflect.Utils.log import get_logger
+from llmreflect.Utils.log import openai_trace_var
 
 
 @dataclass
@@ -63,6 +65,9 @@ class Agent(LLMChain, ABC):
             _type_: _description_
         """
         return self.prompt.input_variables
+
+    def predict(self, **kwargs: Any) -> str:
+        return super().predict([openai_trace_var.get()], **kwargs)
 
 
 class OpenAIAgent(Agent):
