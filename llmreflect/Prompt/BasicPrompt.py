@@ -216,10 +216,11 @@ class BasicPrompt(object):
     def input_format(self):
         txt = ""
         for key in self._format_dict.keys():
-            txt += "\n"
-            txt += self.wrap_key_name(key)
-            txt += " "
-            txt += self._format_dict[key]['explanation']
+            if self._format_dict[key]['type'] != "CONTEXT":
+                txt += "\n"
+                txt += self.wrap_key_name(key)
+                txt += " "
+                txt += self._format_dict[key]['explanation']
         return txt
 
     @input_format.setter

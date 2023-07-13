@@ -16,12 +16,10 @@ class OpenAITracer(OpenAICallbackHandler):
         super().__init__()
         self.traces = []
         self.id = id
-        print(f"Tracer initialized for: {self.id}")
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
-        """Print out the prompts."""
         self.cur_trace = LLMTRACE(input=prompts[0])
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
@@ -29,7 +27,7 @@ class OpenAITracer(OpenAICallbackHandler):
         if response.llm_output is None:
             return None
         else:
-            self.cur_trace.output = response.llm_output
+            self.cur_trace.output = response.generations[0][0].text
         self.successful_requests += 1
 
         if "token_usage" not in response.llm_output:

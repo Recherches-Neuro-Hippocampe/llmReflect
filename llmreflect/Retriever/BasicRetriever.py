@@ -18,8 +18,12 @@ class BasicEvaluationRetriever(BasicRetriever):
     # Class for general postprocessing llm output string
     def retrieve(self, llm_output: str) -> dict:
         llm_output = llm_output.strip('\n').strip(' ')
-        grading = float(llm_output.split("\n")[0].split('[grading]')[-1])
-        explanation = llm_output.split(']')[-1]
+        try:
+            grading = float(llm_output.split("\n")[0].split('[grading]')[-1])
+            explanation = llm_output.split(']')[-1]
+        except Exception:
+            grading = 0.
+            explanation = "Error encountered in grading process!"
         return {'grading': grading, 'explanation': explanation}
 
 
