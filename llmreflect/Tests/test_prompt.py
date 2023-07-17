@@ -1,10 +1,10 @@
 def test_prompt_loading():
     from llmreflect.Prompt.BasicPrompt import BasicPrompt
     prompt_names = [
-        "gradingpostgresql",
-        "moderatepostgresql",
-        "postgresql",
-        "questionpostgresql"
+        "grading_database",
+        "moderate_database",
+        "answer_database",
+        "question_database"
     ]
     for prompt_name in prompt_names:
         prompt = BasicPrompt.load_prompt_from_json_file(prompt_name)

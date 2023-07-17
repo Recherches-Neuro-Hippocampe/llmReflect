@@ -1,11 +1,11 @@
-from llmreflect.Agents.ModerateAgent import PostgresqlModerateAgent
+from llmreflect.Agents.ModerateAgent import DatabaseModerateAgent
 from llmreflect.Chains.BasicChain import BasicChain
 from llmreflect.Retriever.BasicRetriever import BasicQuestionModerateRetriever
 from typing import Any
 
 
 class ModerateChain(BasicChain):
-    def __init__(self, agent: PostgresqlModerateAgent,
+    def __init__(self, agent: DatabaseModerateAgent,
                  retriever: BasicQuestionModerateRetriever):
         super().__init__(agent, retriever)
 
@@ -13,11 +13,11 @@ class ModerateChain(BasicChain):
     def from_config(cls,
                     open_ai_key: str,
                     include_tables: list,
-                    prompt_name: str = 'moderatepostgresql',
+                    prompt_name: str = 'moderate_database',
                     max_output_tokens: int = 512,
                     temperature: float = 0.0):
 
-        agent = PostgresqlModerateAgent(
+        agent = DatabaseModerateAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,

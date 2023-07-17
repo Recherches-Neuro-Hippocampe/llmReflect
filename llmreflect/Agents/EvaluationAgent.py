@@ -1,23 +1,23 @@
 from llmreflect.Agents.BasicAgent import OpenAIAgent
-from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
+from llmreflect.Retriever.DatabaseRetriever import DatabaseEvaluationRetriever
 
 
-class PostgressqlGradingAgent(OpenAIAgent):
+class DatabaseGradingAgent(OpenAIAgent):
     """
-    This is the agent class use for grading postgresql generation.
+    This is the agent class use for grading database command generation.
     Args:
         Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'gradingpostgresql',
+                 prompt_name: str = 'grading_database',
                  max_output_tokens: int = 512,
                  temperature: float = 0.0):
         """
-        Agent class for grading the performance of postgresql generator.
+        Agent class for grading the performance of database command generator.
         Args:
             open_ai_key (str): API key to connect to chatgpt service.
             prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'gradingpostgresql'.
+                Defaults to 'grading_database'.
             max_output_tokens (int, optional): maximum completion length.
                 Defaults to 512.
             temperature (float, optional): how consistent the llm performs.
@@ -28,13 +28,13 @@ class PostgressqlGradingAgent(OpenAIAgent):
                          max_output_tokens=max_output_tokens,
                          temperature=temperature)
 
-    def equip_retriever(self, retriever: BasicEvaluationRetriever):
+    def equip_retriever(self, retriever: DatabaseEvaluationRetriever):
         object.__setattr__(self, 'retriever', retriever)
 
     def grade(self, request: str, sql_cmd: str, db_summary: str) -> dict:
         """
         Convert LLM output into a score and an explanation.
-        Detailed work done by the BasicEvaluationRetriever.
+        Detailed work done by the DatabaseEvaluationRetriever.
         Args:
             request (str): user's input, natural language for querying db
             sql_cmd (str): sql command generated from LLM
@@ -52,7 +52,8 @@ class PostgressqlGradingAgent(OpenAIAgent):
                 llm_output = self.predict(
                     request=request,
                     command=sql_cmd,
-                    summary=db_summary
+                    summary=db_summary,
+                    dialect=self.retriever.database_dialect
                 )
                 self.logger.debug(llm_output)
                 result = self.retriever.retrieve(llm_output)

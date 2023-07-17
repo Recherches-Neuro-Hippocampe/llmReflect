@@ -1,22 +1,21 @@
 from llmreflect.Chains.BasicChain import BasicChain, BasicCombinedChain
-from llmreflect.Agents.QuestionAgent import PostgresqlQuestionAgent
-from llmreflect.Agents.PostgresqlAgent import PostgresqlAgent, \
-    PostgresqlSelfFixAgent
-from llmreflect.Agents.EvaluationAgent import PostgressqlGradingAgent
+from llmreflect.Agents.QuestionAgent import DatabaseQuestionAgent
+from llmreflect.Agents.DatabaseAgent import DatabaseAgent, \
+    DatabaseSelfFixAgent
+from llmreflect.Agents.EvaluationAgent import DatabaseGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
-    DatabaseRetriever
-from llmreflect.Retriever.BasicRetriever import BasicEvaluationRetriever
+    DatabaseRetriever, DatabaseEvaluationRetriever
 from llmreflect.Chains.ModerateChain import ModerateChain
 from typing import List
 
 
 class DatabaseQuestionChain(BasicChain):
-    def __init__(self, agent: PostgresqlQuestionAgent,
+    def __init__(self, agent: DatabaseQuestionAgent,
                  retriever: DatabaseQuestionRetriever):
         """
         A chain for creating questions given by a dataset.
         Args:
-            agent (PostgresqlQuestionAgent): _description_
+            agent (DatabaseQuestionAgent): _description_
             retriever (DatabaseQuestionRetriever): _description_
         """
         super().__init__(agent, retriever)
@@ -25,11 +24,11 @@ class DatabaseQuestionChain(BasicChain):
     def from_config(cls, uri: str,
                     include_tables: List,
                     open_ai_key: str,
-                    prompt_name: str = 'questionpostgresql',
+                    prompt_name: str = 'question_database',
                     max_output_tokens: int = 512,
                     temperature: float = 0.7,
                     sample_rows: int = 0):
-        agent = PostgresqlQuestionAgent(
+        agent = DatabaseQuestionAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,
@@ -57,12 +56,12 @@ class DatabaseQuestionChain(BasicChain):
 
 
 class DatabaseAnswerChain(BasicChain):
-    def __init__(self, agent: PostgresqlAgent, retriever: DatabaseRetriever):
+    def __init__(self, agent: DatabaseAgent, retriever: DatabaseRetriever):
         """
-        Chain for generating postgresql cmd based on questions in natural
+        Chain for generating database query cmd based on questions in natural
         language.
         Args:
-            agent (PostgresqlAgent): _description_
+            agent (DatabaseAgent): _description_
             retriever (DatabaseRetriever): _description_
         """
         super().__init__(agent, retriever)
@@ -71,12 +70,12 @@ class DatabaseAnswerChain(BasicChain):
     def from_config(cls, uri: str,
                     include_tables: List,
                     open_ai_key: str,
-                    prompt_name: str = 'postgresql',
+                    prompt_name: str = 'answer_database',
                     max_output_tokens: int = 512,
                     temperature: float = 0.0,
                     sample_rows: int = 0,
                     max_rows_return=500):
-        agent = PostgresqlAgent(
+        agent = DatabaseAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,
@@ -116,25 +115,28 @@ class DatabaseAnswerChain(BasicChain):
 
 
 class DatabaseGradingChain(BasicChain):
-    def __init__(self, agent: PostgressqlGradingAgent,
-                 retriever: BasicEvaluationRetriever):
+    def __init__(self, agent: DatabaseGradingAgent,
+                 retriever: DatabaseEvaluationRetriever):
         """_summary_
         A chain for the following workflow:
         1. given by questions about a database and according
-            postgresql solutions for questions
+            database query solutions for questions
         2. evaluate the generated solutions
         Args:
             agent (PostgressqlGradingAgent): _description_
-            retriever (BasicEvaluationRetriever): _description_
+            retriever (DatabaseEvaluationRetriever): _description_
         """
         super().__init__(agent, retriever)
 
     @classmethod
     def from_config(cls,
                     open_ai_key: str,
+                    uri: str,
+                    include_tables: list,
                     max_output_tokens: int = 256,
-                    prompt_name: str = "gradingpostgresql",
-                    temperature: float = 0.7):
+                    prompt_name: str = "grading_database",
+                    temperature: float = 0.7,
+                    ):
         """_summary_
 
         Args:
@@ -142,20 +144,21 @@ class DatabaseGradingChain(BasicChain):
             max_output_tokens (int, optional): dont need to be long.
                 Defaults to 256.
             prompt_name (str, optional): _description_.
-                Defaults to "gradingpostgresql".
+                Defaults to "grading_database".
             temperature (float, optional): questions should be diverse.
                 Set this to a high value but lower than 1. Defaults to 0.7.
 
         Returns:
             _type_: _description_
         """
-        agent = PostgressqlGradingAgent(
+        agent = DatabaseGradingAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,
             temperature=temperature)
 
-        retriever = BasicEvaluationRetriever()
+        retriever = DatabaseEvaluationRetriever(uri=uri,
+                                                include_tables=include_tables)
         return cls(agent=agent, retriever=retriever)
 
     def perform(self, question: str,
@@ -198,9 +201,9 @@ class DatabaseQnAGradingChain(BasicCombinedChain):
     def from_config(cls, uri: str,
                     include_tables: List,
                     open_ai_key: str,
-                    question_chain_prompt_name: str = 'questionpostgresql',
-                    answer_chain_prompt_name: str = 'postgresql',
-                    grading_chain_prompt_name: str = 'gradingpostgresql',
+                    question_chain_prompt_name: str = 'question_database',
+                    answer_chain_prompt_name: str = 'answer_database',
+                    grading_chain_prompt_name: str = 'grading_database',
                     q_max_output_tokens: int = 256,
                     q_temperature: float = 0.7,
                     a_max_output_tokens: int = 512,
@@ -232,6 +235,8 @@ class DatabaseQnAGradingChain(BasicCombinedChain):
         )
 
         db_g_chain = DatabaseGradingChain.from_config(
+            uri=uri,
+            include_tables=include_tables,
             open_ai_key=open_ai_key,
             prompt_name=grading_chain_prompt_name,
             max_output_tokens=g_max_output_tokens,
@@ -427,7 +432,7 @@ class DatabaseSelfFixChain(BasicChain):
         BasicChain (_type_): _description_
     """
     def __init__(self,
-                 agent: PostgresqlSelfFixAgent,
+                 agent: DatabaseSelfFixAgent,
                  retriever: DatabaseRetriever):
         super().__init__(agent, retriever)
 
@@ -435,12 +440,12 @@ class DatabaseSelfFixChain(BasicChain):
     def from_config(cls, uri: str,
                     include_tables: List,
                     open_ai_key: str,
-                    prompt_name: str = 'postgresqlfix',
+                    prompt_name: str = 'fix_database',
                     max_output_tokens: int = 512,
                     temperature: float = 0.0,
                     sample_rows: int = 0,
                     max_rows_return: int = 500):
-        agent = PostgresqlSelfFixAgent(
+        agent = DatabaseSelfFixAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,
@@ -504,9 +509,9 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
             uri: str,
             include_tables: list,
             open_ai_key: str,
-            answer_chain_prompt_name: str = "postgresql",
-            fix_chain_prompt_name: str = "postgresqlfix",
-            moderate_chain_prompt_name: str = "moderatepostgresql",
+            answer_chain_prompt_name: str = "answer_database",
+            fix_chain_prompt_name: str = "fix_database",
+            moderate_chain_prompt_name: str = "moderate_database",
             max_output_tokens_a: int = 512,
             max_output_tokens_f: int = 512,
             max_output_tokens_m: int = 256,

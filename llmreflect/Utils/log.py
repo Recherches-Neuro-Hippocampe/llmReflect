@@ -9,13 +9,24 @@ from typing import Dict, Any, List, Generator, Optional
 from langchain.schema import LLMResult
 from contextlib import contextmanager
 from contextvars import ContextVar
+import tiktoken
 
 
 class OpenAITracer(OpenAICallbackHandler):
-    def __init__(self, id: str = "") -> None:
+    def __init__(self, id: str = "", budget: float = 0.01) -> None:
         super().__init__()
         self.traces = []
         self.id = id
+        self.raise_error = True
+        self._budget = budget
+
+    @property
+    def budget(self):
+        return self._budget
+
+    @property
+    def budget_rest(self):
+        return self._budget - self.total_cost
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
@@ -84,12 +95,30 @@ openai_trace_var: ContextVar[Optional[OpenAITracer]] = ContextVar(
 
 
 @contextmanager
-def get_openai_tracer(id: str = "") -> Generator[OpenAITracer, None, None]:
+def get_openai_tracer(id: str = "",
+                      budget: float = 0.1) -> \
+        Generator[OpenAITracer, None, None]:
     """Get OpenAI callback handler in a context manager."""
-    cb = OpenAITracer(id=id)
+    cb = OpenAITracer(id=id, budget=budget)
     openai_trace_var.set(cb)
     yield cb
     openai_trace_var.set(None)
+
+
+def check_current_openai_balance(input_prompt: str,
+                                 max_output_tokens: int,
+                                 model_name: str,
+                                 logger: Any = None) -> bool:
+    openai_tracer = openai_trace_var.get()
+    encoding = tiktoken.get_encoding("cl100k_base")
+    num_tokens = len(encoding.encode(input_prompt)) + max_output_tokens
+    next_possible_cost = get_openai_token_cost_for_model(
+        model_name,
+        num_tokens)
+    if logger:
+        logger.debug(f"Total cost now: {openai_tracer.total_cost}")
+        logger.debug(f"Next round possible cost: {next_possible_cost}")
+    return openai_tracer.budget_rest >= next_possible_cost
 
 
 class CustomFormatter(logging.Formatter):

@@ -3,22 +3,23 @@ from llmreflect.Retriever.BasicRetriever import \
     BasicQuestionModerateRetriever
 
 
-class PostgresqlModerateAgent(OpenAIAgent):
+class DatabaseModerateAgent(OpenAIAgent):
     """
     Agent for filtering out illegal and malicious requests.
     Args:
         Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'moderatepostgresql',
+                 prompt_name: str = 'moderate_database',
                  max_output_tokens: int = 512,
-                 temperature: float = 0.0):
+                 temperature: float = 0.0,
+                 database_topic: str = 'patient data'):
         """
         Agent for filtering out illegal and malicious requests.
         Args:
             open_ai_key (str): API key to connect to chatgpt service.
             prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'moderatepostgresql'.
+                Defaults to 'moderate_database'.
             max_output_tokens (int, optional): maximum completion length.
                 Defaults to 512.
             temperature (float, optional): how consistent the llm performs.
@@ -30,6 +31,7 @@ class PostgresqlModerateAgent(OpenAIAgent):
                          prompt_name=prompt_name,
                          max_output_tokens=max_output_tokens,
                          temperature=temperature)
+        object.__setattr__(self, 'database_topic', database_topic)
 
     def equip_retriever(self, retriever: BasicQuestionModerateRetriever):
         # notice it requires DatabaseQuestionModerateRetriever
@@ -49,7 +51,7 @@ class PostgresqlModerateAgent(OpenAIAgent):
             self.logger.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
-                topic="patient data",
+                topic=self.database_topic,
                 included_tables=self.retriever.include_tables,
                 request=user_input
             )
@@ -71,7 +73,7 @@ class PostgresqlModerateAgent(OpenAIAgent):
             self.logger.error("Error: Retriever is not equipped.")
         else:
             llm_output = self.predict(
-                topic="patient data",
+                topic=self.database_topic,
                 included_tables=self.retriever.include_tables,
                 request=user_input
             )

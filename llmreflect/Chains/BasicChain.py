@@ -25,7 +25,7 @@ class BasicChain(ABC):
     @abstractclassmethod
     def from_config(cls,
                     open_ai_key: str,
-                    prompt_name: str = 'questionpostgresql',
+                    prompt_name: str = 'question_database',
                     temperature: float = 0.0):
         llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
         agent = Agent(prompt=BasicPrompt.
@@ -39,8 +39,9 @@ class BasicChain(ABC):
         result = self.agent.predict(kwargs)
         return result
 
-    def perform_cost_monitor(self, **kwargs: Any):
-        with get_openai_tracer(id=self.__class__.__name__) as cb:
+    def perform_cost_monitor(self, budget: float = 100, **kwargs: Any):
+        with get_openai_tracer(id=self.__class__.__name__,
+                               budget=budget) as cb:
             result = self.perform(**kwargs)
         self.logger.cost(openai_cb_2_str(cb))
         return result, cb
@@ -65,8 +66,9 @@ class BasicCombinedChain(ABC):
     def perform(self, **kwargs: Any):
         return
 
-    def perform_cost_monitor(self, **kwargs: Any):
-        with get_openai_tracer(id=self.__class__.__name__) as cb:
+    def perform_cost_monitor(self, budget: float = 100, **kwargs: Any):
+        with get_openai_tracer(id=self.__class__.__name__,
+                               budget=budget) as cb:
             result = self.perform(**kwargs)
         self.logger.cost(openai_cb_2_str(cb))
         return result, cb

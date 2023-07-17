@@ -5,7 +5,7 @@ def example_edit_prompt():
     """
     An example for how to modify prompt in llmreflect
     """
-    bp = BasicPrompt.load_prompt_from_json_file("moderatepostgresql")
+    bp = BasicPrompt.load_prompt_from_json_file("moderate_database")
 
     inconext_list = bp._in_context_learning_list
     inconext_list.extend(

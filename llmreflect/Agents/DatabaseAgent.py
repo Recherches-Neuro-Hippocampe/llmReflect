@@ -3,14 +3,14 @@ from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from typing import Any
 
 
-class PostgresqlAgent(OpenAIAgent):
+class DatabaseAgent(OpenAIAgent):
     """
-    Agent class for executing postgresql command
+    Agent class for executing database query command
     Args:
         Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'postgresql',
+                 prompt_name: str = 'answer_database',
                  max_output_tokens: int = 512,
                  temperature: float = 0.0,
                  split_symbol="[answer]"):
@@ -19,11 +19,12 @@ class PostgresqlAgent(OpenAIAgent):
         Args:
             open_ai_key (str): API key to connect to chatgpt service.
             prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'postgressql'.
+                Defaults to 'answer_database'.
             max_output_tokens (int, optional): maximum completion length.
                 Defaults to 512.
             temperature (float, optional): how consistent the llm performs.
                 The lower the more consistent. Defaults to 0.0.
+            split_symbol (str, optional): the string used for splitting answers
         """
         super().__init__(open_ai_key=open_ai_key,
                          prompt_name=prompt_name,
@@ -41,7 +42,7 @@ class PostgresqlAgent(OpenAIAgent):
 
     def predict_sql_cmd(self, user_input: str) -> str:
         """
-        Generate the postgresql command, it is a gross output which means
+        Generate the database command, it is a gross output which means
         no post processing. It could be a wrong format that not executable.
         Need extraction and cleaning and formatting.
         Args:
@@ -82,8 +83,6 @@ class PostgresqlAgent(OpenAIAgent):
         """
         assert get_cmd or get_summary or get_db, "At least get one thing"
         llm_output = self.predict_sql_cmd(user_input=user_input)
-        # llm_output = llm_output.replace("tb_", "")
-        # # intentionally causing error for testing
         cmd_n_summary = self.retriever.retrieve_summary(
             llm_output=llm_output,
             return_cmd=True,
@@ -132,12 +131,11 @@ class PostgresqlAgent(OpenAIAgent):
         return result
 
 
-class PostgresqlSelfFixAgent(PostgresqlAgent):
-
+class DatabaseSelfFixAgent(DatabaseAgent):
     def predict_sql_cmd(self, user_input: str, history: str,
                         his_error: str) -> str:
         """
-        Generate the postgresql command, it is a gross output which means
+        Generate a database query command, it is a gross output which means
         no post processing. It could be a wrong format that not executable.
         Need extraction and cleaning and formatting.
         Args:

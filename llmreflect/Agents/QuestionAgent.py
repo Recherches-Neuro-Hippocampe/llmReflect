@@ -2,14 +2,14 @@ from llmreflect.Agents.BasicAgent import OpenAIAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
-class PostgresqlQuestionAgent(OpenAIAgent):
+class DatabaseQuestionAgent(OpenAIAgent):
     """
     Agent for creating questions based on a given database
     Args:
         Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'questionpostgresql',
+                 prompt_name: str = 'question_database',
                  max_output_tokens: int = 512,
                  temperature: float = 0.7):
         """
@@ -17,7 +17,7 @@ class PostgresqlQuestionAgent(OpenAIAgent):
         Args:
             open_ai_key (str): API key to connect to chatgpt service.
             prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'questionpostgresql'.
+                Defaults to 'question_database'.
             max_output_tokens (int, optional): maximum completion length.
                 Defaults to 512.
             temperature (float, optional): how consistent the llm performs.
@@ -50,7 +50,8 @@ class PostgresqlQuestionAgent(OpenAIAgent):
         else:
             llm_output = self.predict(
                 table_info=self.retriever.table_info,
-                n_questions=n_questions
+                n_questions=n_questions,
+                dialect=self.retriever.database_dialect
             )
             self.logger.debug(llm_output)
             result = self.retriever.retrieve(llm_output)

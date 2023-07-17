@@ -111,3 +111,23 @@ class DatabaseQuestionRetriever(DatabaseRetriever):
         for line in q_e_list:
             results.append(line.split('] ')[-1])
         return results
+
+
+class DatabaseEvaluationRetriever(DatabaseRetriever):
+    # Class for general postprocessing llm output string
+    def __init__(self, uri: str, include_tables: List,
+                 sample_rows: int = 0) -> None:
+        super().__init__(uri=uri,
+                         include_tables=include_tables,
+                         max_rows_return=None,
+                         sample_rows=sample_rows)
+
+    def retrieve(self, llm_output: str) -> dict:
+        llm_output = llm_output.strip('\n').strip(' ')
+        try:
+            grading = float(llm_output.split("\n")[0].split('[grading]')[-1])
+            explanation = llm_output.split(']')[-1]
+        except Exception:
+            grading = 0.
+            explanation = "Error encountered in grading process!"
+        return {'grading': grading, 'explanation': explanation}

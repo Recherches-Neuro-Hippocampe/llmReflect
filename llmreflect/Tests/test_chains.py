@@ -154,7 +154,7 @@ def test_self_fix_chain():
         uri=uri,
         include_tables=include_tables,
         open_ai_key=open_ai_key,
-        prompt_name="questionpostgresql",
+        prompt_name="question_database",
         max_output_tokens=max_output_tokens,
         temperature=0.7,
         sample_rows=0
@@ -164,7 +164,7 @@ def test_self_fix_chain():
         uri=uri,
         include_tables=include_tables,
         open_ai_key=open_ai_key,
-        prompt_name="postgresql",
+        prompt_name="answer_database",
         max_output_tokens=max_output_tokens,
         temperature=0.0,
         sample_rows=0,
@@ -175,7 +175,7 @@ def test_self_fix_chain():
         uri=uri,
         include_tables=include_tables,
         open_ai_key=open_ai_key,
-        prompt_name="postgresqlfix",
+        prompt_name="fix_database",
         max_output_tokens=max_output_tokens,
         temperature=0.1,
         sample_rows=0,
@@ -231,11 +231,43 @@ def test_answerNfix_chain():
             'tb_patient_medications'
         ],
         open_ai_key=config('OPENAI_API_KEY'),
-        answer_chain_prompt_name="postgresql",
-        fix_chain_prompt_name="postgresqlfix"
+        answer_chain_prompt_name="answer_database",
+        fix_chain_prompt_name="fix_database"
     )
     result_dict, traces = ch.perform_cost_monitor(
         user_input="give me a list overweight patients")
     assert len(result_dict['summary']) > 0
     assert type(result_dict['error']) is list
     LOGGER.debug(traces_2_str(traces))
+
+
+@pytest.mark.skipif(bool(in_workflow()),
+                    reason="Only test database operations \
+                    in local env")
+def test_budget_limitation():
+    from llmreflect.Chains.DatabaseChain import DatabaseQnAGradingChain
+    from decouple import config
+
+    N_QUESTIONS = 100
+
+    uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
+{config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
+
+    ch = DatabaseQnAGradingChain.from_config(
+        uri=uri,
+        include_tables=[
+            'tb_patient',
+            'tb_patients_allergies',
+            'tb_appointment_patients',
+            'tb_patient_mmse_and_moca_scores',
+            'tb_patient_medications'
+        ],
+        a_max_output_tokens=512,
+        g_max_output_tokens=256,
+        open_ai_key=config('OPENAI_API_KEY')
+    )
+    try:
+        logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS,
+                                               budget=0.005)
+    except Exception as e:
+        assert "Budget" in str(e)
