@@ -5,8 +5,6 @@ from llmreflect.Retriever.DatabaseRetriever import DatabaseEvaluationRetriever
 class DatabaseGradingAgent(OpenAIAgent):
     """
     This is the agent class use for grading database command generation.
-    Args:
-        Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
                  prompt_name: str = 'grading_database',

@@ -6,8 +6,6 @@ from llmreflect.Retriever.BasicRetriever import \
 class DatabaseModerateAgent(OpenAIAgent):
     """
     Agent for filtering out illegal and malicious requests.
-    Args:
-        Agent (_type_): _description_
     """
     def __init__(self, open_ai_key: str,
                  prompt_name: str = 'moderate_database',
@@ -41,7 +39,7 @@ class DatabaseModerateAgent(OpenAIAgent):
         """
         predict whether accept the request or not
         Args:
-            user_input (str): _description_
+            user_input (str): User's natural language input
 
         Returns:
             bool: boolean answer, true or false
@@ -63,7 +61,7 @@ class DatabaseModerateAgent(OpenAIAgent):
         """
         predict judgement with explanation
         Args:
-            user_input (str): _description_
+            user_input (str): User's natural language input
 
         Returns:
             dict: {'decision': bool, 'explanation': str}

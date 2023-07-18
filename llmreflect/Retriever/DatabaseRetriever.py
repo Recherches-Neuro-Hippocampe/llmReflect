@@ -7,22 +7,15 @@ import random
 
 
 class DatabaseRetriever(BasicRetriever):
-    """Retriever based on BasicRetriever, used for querying database
-    Args:
-        BasicRetriever (_type_): _description_
-    """
     def __init__(self, uri: str, include_tables: List,
                  max_rows_return: int,
                  sample_rows: int = 0) -> None:
-        """_summary_
-
+        """
+        Retriever based on BasicRetriever, used for querying database
         Args:
             uri (str): database connection uri
             include_tables (List): which tables to include
             max_rows_return (int): maximum row to return
-
-        Returns:
-            _type_: _description_
         """
         super().__init__()
         self.max_rows_return = max_rows_return
@@ -35,12 +28,32 @@ class DatabaseRetriever(BasicRetriever):
         self.database_dialect = self.database.dialect
         self.table_info = self.database.get_table_info_no_throw()
 
-    def retrieve_cmd(self, llm_output: str, split_symbol: str = "] "):
+    def retrieve_cmd(self, llm_output: str, split_symbol: str = "] ") -> str:
+        """
+        retrieve database query sql command from llm output
+        Args:
+            llm_output (str): Gross output from llm.
+            split_symbol (str, optional): Symbols used to split.
+                Defaults to "] ".
+
+        Returns:
+            str: database query
+        """
         processed_llm_output = llm_output.split(split_symbol)[-1]
         processed_llm_output = processed_llm_output.strip('\n').strip(' ')
         return processed_llm_output
 
-    def retrieve(self, llm_output: str, split_symbol: str = "] "):
+    def retrieve(self, llm_output: str, split_symbol: str = "] ") -> str:
+        """
+        retrieve a database query execution result.
+        It is converted into a string.
+        Args:
+            llm_output (str):  Gross output from llm.
+            split_symbol (str, optional): Symbols used to split.
+                Defaults to "] ".
+        Returns:
+            str: A string representing the database execution result.
+        """
         sql_cmd = self.retrieve_cmd(llm_output=llm_output,
                                     split_symbol=split_symbol)
         sql_cmd = upper_boundary_maximum_records(
@@ -53,6 +66,22 @@ class DatabaseRetriever(BasicRetriever):
 
     def retrieve_summary(self, llm_output: str, return_cmd: bool = False,
                          split_symbol: str = "] "):
+        """
+        1. Retrieve the sql cmd from gross llm output.
+        2. execute the cmd
+        3. summarize the executed result into a brief report.
+        Args:
+            llm_output (str): Gross output from llm.
+            return_cmd (bool, optional): If return query. Defaults to False.
+            split_symbol (str, optional): Symbols used to split.
+                Defaults to "] ".
+
+        Return:
+            str: A brief summary of database execution result.
+                If `return_cmd` is set to 'True'
+            dict: A dictionary when `return_cmd` is set to 'False',
+                {'cmd', database query, 'summary': brief summary}
+        """
         sql_cmd = self.retrieve_cmd(llm_output=llm_output,
                                     split_symbol=split_symbol)
         sql_cmd = upper_boundary_maximum_records(
@@ -84,26 +113,30 @@ An example of entries is: {','.join(example)}.'''
 
 
 class DatabaseQuestionRetriever(DatabaseRetriever):
-    """_summary_
-    Retriever class based on DatabaseRetriever
-    Args:
-        DatabaseRetriever (_type_): _description_
-    """
-    def __init__(self, uri: str, include_tables: List,
+    def __init__(self, uri: str, include_tables: List[str],
                  sample_rows: int = 0) -> None:
+        """
+        Retriever class for retrieving question based on DatabaseRetriever
+        Args:
+            uri (str): A url used for database connection.
+            include_tables (List): a list of strings,
+                indicate which tables in the database to include.
+            sample_rows (int, optional): Number of row to provide
+                to llm as an example. Defaults to 0.
+        """
         super().__init__(uri=uri,
                          include_tables=include_tables,
                          max_rows_return=None,
                          sample_rows=sample_rows)
 
-    def retrieve(self, llm_output: str):
-        """_summary_
-
+    def retrieve(self, llm_output: str) -> List[str]:
+        """
+        Retrieve questions about the database from llm output.
         Args:
             llm_output (str): output from llm
 
         Returns:
-            _type_: a processed string
+            List: a list of questions. Each question is a `str`
         """
         processed_llm_output = llm_output.strip("\n").strip(' ')
         q_e_list = processed_llm_output.split('\n')[1:]
@@ -114,15 +147,33 @@ class DatabaseQuestionRetriever(DatabaseRetriever):
 
 
 class DatabaseEvaluationRetriever(DatabaseRetriever):
-    # Class for general postprocessing llm output string
     def __init__(self, uri: str, include_tables: List,
                  sample_rows: int = 0) -> None:
+        """
+        Class for general postprocessing llm output string
+        Args:
+            uri (str): A url used for database connection.
+            include_tables (List): a list of strings,
+                indicate which tables in the database to include.
+            sample_rows (int, optional): Number of row to provide
+                to llm as an example. Defaults to 0.
+        """
         super().__init__(uri=uri,
                          include_tables=include_tables,
                          max_rows_return=None,
                          sample_rows=sample_rows)
 
     def retrieve(self, llm_output: str) -> dict:
+        """
+        Retrieve the scores and the explanation for score
+        from llm output.
+        Args:
+            llm_output (str): gross llm output.
+
+        Returns:
+            dict: {'grading': float, score given by llm,
+                'explanation': str, reason for the score.}
+        """
         llm_output = llm_output.strip('\n').strip(' ')
         try:
             grading = float(llm_output.split("\n")[0].split('[grading]')[-1])

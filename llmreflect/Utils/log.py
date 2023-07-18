@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from uuid import UUID
 from langchain.callbacks import OpenAICallbackHandler
 from langchain.callbacks.openai_info import standardize_model_name
 from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
@@ -32,6 +33,16 @@ class OpenAITracer(OpenAICallbackHandler):
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
         self.cur_trace = LLMTRACE(input=prompts[0])
+
+    def on_chain_error(self, error: Exception | KeyboardInterrupt, *,
+                       run_id: UUID, parent_run_id: UUID | None = None,
+                       **kwargs: Any) -> Any:
+        self.cur_trace.output = str(error)
+        self.traces.append(self.cur_trace)
+        return super().on_chain_error(error,
+                                      run_id=run_id,
+                                      parent_run_id=parent_run_id,
+                                      **kwargs)
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Collect token usage."""
@@ -109,12 +120,34 @@ def check_current_openai_balance(input_prompt: str,
                                  max_output_tokens: int,
                                  model_name: str,
                                  logger: Any = None) -> bool:
+    """Check if the budget balance can cover this round of llm run.
+
+    Args:
+        input_prompt (str): the input prompt for the llm
+        max_output_tokens (int): the maximum number of completion tokens,
+            configured in llm class.
+        model_name (str): the model name used for referencing,
+            Check LLM_BACKBONE_MODEL.
+        logger (Any, optional): Log predicted cost information
+            when logger provided.
+
+    Returns:
+        bool: _description_
+    """
     openai_tracer = openai_trace_var.get()
     encoding = tiktoken.get_encoding("cl100k_base")
-    num_tokens = len(encoding.encode(input_prompt)) + max_output_tokens
-    next_possible_cost = get_openai_token_cost_for_model(
-        model_name,
-        num_tokens)
+    input_tokens = len(encoding.encode(input_prompt))
+    input_cost = get_openai_token_cost_for_model(
+        model_name=model_name,
+        num_tokens=input_tokens,
+        is_completion=False
+    )
+    possible_output_cost = get_openai_token_cost_for_model(
+        model_name=model_name,
+        num_tokens=max_output_tokens,
+        is_completion=True
+    )
+    next_possible_cost = input_cost + possible_output_cost
     if logger:
         logger.debug(f"Total cost now: {openai_tracer.total_cost}")
         logger.debug(f"Next round possible cost: {next_possible_cost}")
@@ -239,7 +272,7 @@ def get_logger(name: str = "Default") -> logging.Logger:
 
 
 def export_log(dir: str):
-    """A simple interface copying the log file to a designated place.
+    """A simple interface copying the log file to a designated directory.
 
     Args:
         file_path (_type_): designated directory
@@ -281,6 +314,14 @@ def message(msg, color=None):
 
 
 def openai_cb_2_str(cb: OpenAITracer) -> str:
+    """
+    converting openai tracer info to one string.
+    Args:
+        cb (OpenAITracer): tracer/callback handlers for openai
+
+    Returns:
+        str: A string describing the cost 
+    """
     tmp_str = ""
     tmp_str += f"[Total Tokens] {cb.total_tokens}, "
     tmp_str += f"[Successful Requests] {cb.successful_requests}, "
@@ -289,6 +330,15 @@ def openai_cb_2_str(cb: OpenAITracer) -> str:
 
 
 def traces_2_str(cb: OpenAITracer) -> str:
+    """
+    converting openai tracer info to one string.
+    Similar to openai_cb_2_str function but with more details
+    Args:
+        cb (OpenAITracer): tracer/callback handlers for openai
+
+    Returns:
+        str: A string describing the cost
+    """
     total_str = "\n"
     for trace in cb.traces:
         tmp_str = ""
@@ -305,4 +355,4 @@ def traces_2_str(cb: OpenAITracer) -> str:
     return total_str
 
 
-addLoggingLevel("COST", 25)
+addLoggingLevel("COST", 25)  # add a logging level for cost

@@ -266,8 +266,6 @@ def test_budget_limitation():
         g_max_output_tokens=256,
         open_ai_key=config('OPENAI_API_KEY')
     )
-    try:
-        logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS,
-                                               budget=0.005)
-    except Exception as e:
-        assert "Budget" in str(e)
+
+    logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS,
+                                           budget=0.005)

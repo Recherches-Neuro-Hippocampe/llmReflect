@@ -6,7 +6,7 @@ from llmreflect.Agents.EvaluationAgent import DatabaseGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever, DatabaseEvaluationRetriever
 from llmreflect.Chains.ModerateChain import ModerateChain
-from typing import List
+from typing import List, Any
 
 
 class DatabaseQuestionChain(BasicChain):
@@ -15,8 +15,8 @@ class DatabaseQuestionChain(BasicChain):
         """
         A chain for creating questions given by a dataset.
         Args:
-            agent (DatabaseQuestionAgent): _description_
-            retriever (DatabaseQuestionRetriever): _description_
+            agent (DatabaseQuestionAgent): DatabaseQuestionAgent
+            retriever (DatabaseQuestionRetriever): DatabaseQuestionRetriever
         """
         super().__init__(agent, retriever)
 
@@ -27,7 +27,26 @@ class DatabaseQuestionChain(BasicChain):
                     prompt_name: str = 'question_database',
                     max_output_tokens: int = 512,
                     temperature: float = 0.7,
-                    sample_rows: int = 0):
+                    sample_rows: int = 0) -> BasicChain:
+        """
+        Initialize class from configurations
+        Args:
+            uri (str): uri to connect to the database
+            include_tables (List): a list of names of database tables
+                to include
+            open_ai_key (str): openai api key
+            prompt_name (str, optional): prompt file name without json.
+            max_output_tokens (int, optional): maximum completion tokens.
+                Defaults to 512.
+            temperature (float, optional): how unstable the llm is.
+                Defaults to 0.7. Since this chain is used for generating
+                random questions. We would like it to be creative.
+            sample_rows (int, optional): rows from db provided to llm
+                as a sample. Defaults to 0.
+
+        Returns:
+            BasicChain: A DatabaseQuestionChain object.
+        """
         agent = DatabaseQuestionAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
@@ -46,7 +65,8 @@ class DatabaseQuestionChain(BasicChain):
         Overwrite perform function.
         Generate n questions.
         Args:
-            n_questions (int, optional): _description_. Defaults to 5.
+            n_questions (int, optional): number of questions to generate.
+                Defaults to 5.
 
         Returns:
             list: a list of questions, each question is a str object.
@@ -61,8 +81,8 @@ class DatabaseAnswerChain(BasicChain):
         Chain for generating database query cmd based on questions in natural
         language.
         Args:
-            agent (DatabaseAgent): _description_
-            retriever (DatabaseRetriever): _description_
+            agent (DatabaseAgent): DatabaseAgent
+            retriever (DatabaseRetriever): DatabaseRetriever
         """
         super().__init__(agent, retriever)
 
@@ -74,7 +94,28 @@ class DatabaseAnswerChain(BasicChain):
                     max_output_tokens: int = 512,
                     temperature: float = 0.0,
                     sample_rows: int = 0,
-                    max_rows_return=500):
+                    max_rows_return=500) -> BasicChain:
+        """
+        Initialize class from configurations
+        Args:
+            uri (str): uri to connect to the database
+            include_tables (List): a list of names of database tables
+                to include
+            open_ai_key (str): openai api key
+            prompt_name (str, optional): prompt file name.
+                Defaults to 'answer_database'.
+            max_output_tokens (int, optional): Maximum completion tokens.
+                Defaults to 512.
+            temperature (float, optional): How unstable the llm is.
+                Defaults to 0.0.
+            sample_rows (int, optional): Rows from db provided to llm
+                as a sample. Defaults to 0.
+            max_rows_return (int, optional): Maximum rows retrieve from db.
+                Defaults to 500.
+
+        Returns:
+            BasicChain: A DatabaseAnswerChain object.
+        """
         agent = DatabaseAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
@@ -117,14 +158,15 @@ class DatabaseAnswerChain(BasicChain):
 class DatabaseGradingChain(BasicChain):
     def __init__(self, agent: DatabaseGradingAgent,
                  retriever: DatabaseEvaluationRetriever):
-        """_summary_
+        """
         A chain for the following workflow:
         1. given by questions about a database and according
             database query solutions for questions
         2. evaluate the generated solutions
         Args:
-            agent (PostgressqlGradingAgent): _description_
-            retriever (DatabaseEvaluationRetriever): _description_
+            agent (PostgressqlGradingAgent): PostgressqlGradingAgent
+            retriever (DatabaseEvaluationRetriever):
+                DatabaseEvaluationRetriever
         """
         super().__init__(agent, retriever)
 
@@ -135,21 +177,21 @@ class DatabaseGradingChain(BasicChain):
                     include_tables: list,
                     max_output_tokens: int = 256,
                     prompt_name: str = "grading_database",
-                    temperature: float = 0.7,
-                    ):
-        """_summary_
-
+                    temperature: float = 0.0,
+                    ) -> BasicChain:
+        """
+        Initialize an object of DatabaseGradingChain from configurations.
         Args:
-            open_ai_key (str): _description_
-            max_output_tokens (int, optional): dont need to be long.
-                Defaults to 256.
-            prompt_name (str, optional): _description_.
+            open_ai_key (str): openai api key.
+            max_output_tokens (int, optional): Maximum completion tokens.
+                Dont need to be long. Defaults to 256.
+            prompt_name (str, optional): Prompt file name.
                 Defaults to "grading_database".
-            temperature (float, optional): questions should be diverse.
-                Set this to a high value but lower than 1. Defaults to 0.7.
+            temperature (float, optional): How unstable the llm is.
+                Defaults to 0.0.
 
         Returns:
-            _type_: _description_
+            BasicChain: A DatabaseGradingChain object.
         """
         agent = DatabaseGradingAgent(
             open_ai_key=open_ai_key,
@@ -183,6 +225,24 @@ class DatabaseGradingChain(BasicChain):
 
 class DatabaseQnAGradingChain(BasicCombinedChain):
     def __init__(self, chains: List[BasicChain], q_batch_size: int = 5):
+        """
+        A combined chain for following workflow:
+        1. creating questions given by a dataset.
+        2. answering the questions by generating database queries.
+        3. evaluating the generated answers.
+        Args:
+            chains (List[BasicChain]): a list of chains to complete the job.
+                Expecting three exact chain: DatabaseQuestionChain,
+                DatabaseAnswerChain, DatabaseGradingChain
+            q_batch_size (int, optional): size of batch for generating
+                questions. Defaults to 5. The reasons for generating questions
+                by batch is that I found generating too many questions all at
+                once, the questions become repetitive.
+
+        Raises:
+            Exception: Illegal chain error when the list of chains do not meet
+                requirements.
+        """
         super().__init__(chains)
         assert len(chains) == 3
 
@@ -205,14 +265,45 @@ class DatabaseQnAGradingChain(BasicCombinedChain):
                     answer_chain_prompt_name: str = 'answer_database',
                     grading_chain_prompt_name: str = 'grading_database',
                     q_max_output_tokens: int = 256,
-                    q_temperature: float = 0.7,
                     a_max_output_tokens: int = 512,
                     g_max_output_tokens: int = 256,
+                    q_temperature: float = 0.7,
                     a_temperature: float = 0.0,
                     g_temperature: float = 0.0,
                     sample_rows: int = 0,
-                    max_rows_return=500):
-
+                    max_rows_return=500) -> BasicCombinedChain:
+        """
+        Initialize a DatabaseQnAGradingChain object.
+        Args:
+            uri (str): A uri to connect to the database.
+            include_tables (List): a list of names of database tables
+                to include.
+            open_ai_key (str): openai api key.
+            question_chain_prompt_name (str, optional): Prompt file name for
+                question chain. Defaults to 'question_database'.
+            answer_chain_prompt_name (str, optional): Prompt file name for
+                answer chain. Defaults to 'answer_database'.
+            grading_chain_prompt_name (str, optional): Prompt file name for
+                grading chain. Defaults to 'grading_database'.
+            q_max_output_tokens (int, optional): Maximum completion tokens for
+                generating questions. Defaults to 256.
+            a_max_output_tokens (int, optional): Maximum completion tokens for
+                generating answers. Defaults to 512.
+            g_max_output_tokens (int, optional): Maximum completion tokens for
+                evaluating answers. Defaults to 256.
+            q_temperature (float, optional): temperature for question.
+                Defaults to 0.7.
+            a_temperature (float, optional): temperature for answer.
+                Defaults to 0.0.
+            g_temperature (float, optional): temperature for grading.
+                Defaults to 0.0.
+            sample_rows (int, optional): Rows from db provided to llm
+                as a sample. Defaults to 0.
+            max_rows_return (int, optional): Maximum rows retrieve from db.
+                Defaults to 500.
+        Returns:
+            BasicCombinedChain: _description_
+        """
         db_q_chain = DatabaseQuestionChain.from_config(
             uri=uri,
             include_tables=include_tables,
@@ -246,10 +337,11 @@ class DatabaseQnAGradingChain(BasicCombinedChain):
                    q_batch_size=5)
 
     def perform(self, n_question: int = 5) -> dict:
-        """_summary_
-
+        """
+        perform the q and a and grading chain.
         Args:
-            n_question (int, optional): _description_. Defaults to 5.
+            n_question (int, optional): number of questions to create.
+                Defaults to 5.
 
         Returns:
             dict: {
@@ -297,6 +389,22 @@ class DatabaseQnAGradingChain(BasicCombinedChain):
 
 class DatabaseAnswerNFixChain(BasicCombinedChain):
     def __init__(self, chains: List[BasicChain], fix_patience: int = 3):
+        """
+        A combined chain with two sub-basic chains, database answer chain
+        and self-fix chain. This chain is responsible for the following work:
+        1. answering natural language questions by creating database queries.
+        2. try executing the query, if encounter error, fix the query.
+        Args:
+            chains (List[BasicChain]): a list of chains,
+                Supposed to be 2 chains. DatabaseAnswerChain and
+                DatabaseSelfFixChain.
+            fix_patience (int, optional): maximum self-fix attempts allowed.
+                Defaults to 3.
+
+        Raises:
+            Exception: Illegal chain error when the list of chains do not meet
+                requirements.
+        """
         super().__init__(chains)
         assert len(chains) == 2
         self.fix_patience = fix_patience
@@ -353,14 +461,18 @@ class DatabaseAnswerNFixChain(BasicCombinedChain):
                 get_db: bool = False,
                 get_summary: bool = True,
                 log_fix: bool = True) -> dict:
-        """_summary_
-
+        """
+        Perform the main function for this chain.
         Args:
-            user_input (str): _description_
-            get_cmd (bool, optional): _description_. Defaults to True.
-            get_db (bool, optional): _description_. Defaults to False.
-            get_summary (bool, optional): _description_. Defaults to True.
-            log_fix (bool, optional): _description_. Defaults to True.
+            user_input (str): user's natural language question.
+            get_cmd (bool, optional): Flag, if return the database query
+                command. Defaults to True.
+            get_db (bool, optional): Flag, if return database execution
+                results. Defaults to False.
+            get_summary (bool, optional): Flag, if return a summary of
+                the database execution results. Defaults to True.
+            log_fix (bool, optional): Flag, if log the fix attempts by
+                logger. Defaults to True.
 
         Returns:
             dict: 'cmd': str, sql_cmd,
@@ -426,14 +538,15 @@ class DatabaseAnswerNFixChain(BasicCombinedChain):
 
 
 class DatabaseSelfFixChain(BasicChain):
-    """
-    A chain class for fixing sql errors
-    Args:
-        BasicChain (_type_): _description_
-    """
     def __init__(self,
                  agent: DatabaseSelfFixAgent,
                  retriever: DatabaseRetriever):
+        """
+        A Basic chain class for fix database queries.
+        Args:
+            agent (DatabaseSelfFixAgent): DatabaseSelfFixAgent
+            retriever (DatabaseRetriever): DatabaseRetriever
+        """
         super().__init__(agent, retriever)
 
     @classmethod
@@ -444,7 +557,28 @@ class DatabaseSelfFixChain(BasicChain):
                     max_output_tokens: int = 512,
                     temperature: float = 0.0,
                     sample_rows: int = 0,
-                    max_rows_return: int = 500):
+                    max_rows_return: int = 500) -> BasicChain:
+        """
+        Initialize a DatabaseSelfFixChain object from configurations.
+        Args:
+            uri (str): A uri to connect to the database.
+            include_tables (List): A list of names of database tables
+                to include.
+            open_ai_key (str): openai api key.
+            prompt_name (str, optional): Prompt file name.
+                Defaults to 'fix_database'.
+            max_output_tokens (int, optional): Maximum completion tokens.
+                Defaults to 512.
+            temperature (float, optional): How unstable the llm is.
+                Defaults to 0.0.
+            sample_rows (int, optional): Rows from db provided to llm
+                as a sample. Defaults to 0.
+            max_rows_return (int, optional): Maximum rows retrieve from db.
+                Defaults to 500.
+
+        Returns:
+            BasicChain: A DatabaseSelfFixChain object.
+        """
         agent = DatabaseSelfFixAgent(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
@@ -466,8 +600,8 @@ class DatabaseSelfFixChain(BasicChain):
                 get_cmd: bool = True,
                 get_db: bool = False,
                 get_summary: bool = True) -> dict:
-        """_summary_
-
+        """
+        Perform chain function.
         Args:
             user_input (str): user's description
             history (str): history command used for query
@@ -492,6 +626,22 @@ class DatabaseSelfFixChain(BasicChain):
 
 class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
     def __init__(self, chains: List[BasicChain], fix_patience: int = 3):
+        """
+        A combined chain for: moderating user input, generating
+        database query to solve the question, when encounter an
+        error during execution, fix the query.
+        Args:
+            chains (List[BasicChain]): A list of chains.
+            Should be two chain, a basic chain and a combined chain.
+            The basic chain is the ModerateChain. And the combined
+            chain should be DatabaseAnswerNFixChain.
+            fix_patience (int, optional): maximum self-fix attempts allowed.
+                Defaults to 3.
+
+        Raises:
+            Exception: Illegal chain error when the list of chains do not meet
+                requirements.
+        """
         super().__init__(chains)
         assert len(chains) == 2
         self.fix_patience = fix_patience
@@ -518,9 +668,44 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
             temperature_a: float = 0.0,
             temperature_f: float = 0.0,
             temperature_m: float = 0.0,
-            sample_row: int = 0,
+            sample_rows: int = 0,
             max_rows_return: int = 500,
-            fix_patience: int = 3):
+            fix_patience: int = 3) -> BasicCombinedChain:
+        """
+        Initialize a DatabaseModerateNAnswerNFixChain object from configuration.
+        Args:
+            uri (str): A uri to connect to the database.
+            include_tables (list): A list of names of database tables
+                to include.
+            open_ai_key (str): openai api key.
+            answer_chain_prompt_name (str, optional): Prompt file for answer
+                chain. Defaults to "answer_database".
+            fix_chain_prompt_name (str, optional): Prompt file for fix chain.
+                Defaults to "fix_database".
+            moderate_chain_prompt_name (str, optional): prompt file for
+                moderate chain . Defaults to "moderate_database".
+            max_output_tokens_a (int, optional): Maximum completion tokens for
+                answering. Defaults to 512.
+            max_output_tokens_f (int, optional): Maximum completion tokens for
+                fixing. Defaults to 512.
+            max_output_tokens_m (int, optional): Maximum completion tokens for
+                moderation. Defaults to 512.
+            temperature_a (float, optional): temperature for answering chain.
+                Defaults to 0.0.
+            temperature_f (float, optional): temperature for fixing chain.
+                Defaults to 0.0.
+            temperature_m (float, optional): temperature for moderation chain.
+                Defaults to 0.0.
+            sample_rows (int, optional): Rows from db provided to llm
+                as a sample. Defaults to 0.
+            max_rows_return (int, optional): Maximum rows retrieve from db.
+                Defaults to 500.
+            fix_patience (int, optional): Maximum self-fix attempts allowed.
+                Defaults to 3.
+
+        Returns:
+            BasicCombinedChain: An object of DatabaseModerateNAnswerNFixChain.
+        """
 
         db_m_chain = ModerateChain.from_config(
             open_ai_key=open_ai_key,
@@ -539,7 +724,7 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
             max_output_tokens_f=max_output_tokens_f,
             temperature_a=temperature_a,
             temperature_f=temperature_f,
-            sample_row=sample_row,
+            sample_row=sample_rows,
             max_rows_return=max_rows_return,
             fix_patience=fix_patience
         )
@@ -554,8 +739,8 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
                 get_summary: bool = True,
                 log_fix: bool = True,
                 explain_moderate: bool = True) -> dict:
-        """_summary_
-
+        """
+        Perform chain function.
         Args:
             user_input (str): _description_
             get_cmd (bool, optional): _description_. Defaults to True.
