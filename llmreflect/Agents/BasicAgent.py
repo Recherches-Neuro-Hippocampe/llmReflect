@@ -62,7 +62,8 @@ class Agent(LLMChain, ABC):
         super().__init__(prompt=prompt.get_langchain_prompt_template(),
                          llm=llm)
         # Agent class inherit from the LLM chain class
-        # Assume the attribute llm has the properties, model_name and max_tokens
+        # Assume the attribute llm has the properties, model_name and
+        # max_tokens
         object.__setattr__(self, 'retriever', None)
         object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
         object.__setattr__(self, "max_output_tokens", self.llm.max_tokens)
@@ -168,8 +169,9 @@ class Agent(LLMChain, ABC):
         """call function used in _predict function
 
         Args:
-            inputs (Dict[str, Any]): _description_
-            run_manager (Optional[CallbackManagerForChainRun], optional): _description_. Defaults to None.
+            inputs (Dict[str, Any]): inputs prepared by `self.prep_input`
+            run_manager (Optional[CallbackManagerForChainRun], optional):
+                run manager provided by callback manager. Defaults to None.
 
         Returns:
             Dict[str, str]: llm outputs

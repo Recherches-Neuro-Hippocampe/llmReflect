@@ -320,7 +320,7 @@ def openai_cb_2_str(cb: OpenAITracer) -> str:
         cb (OpenAITracer): tracer/callback handlers for openai
 
     Returns:
-        str: A string describing the cost 
+        str: A string describing the cost
     """
     tmp_str = ""
     tmp_str += f"[Total Tokens] {cb.total_tokens}, "

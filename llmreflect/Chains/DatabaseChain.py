@@ -6,7 +6,7 @@ from llmreflect.Agents.EvaluationAgent import DatabaseGradingAgent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever, DatabaseEvaluationRetriever
 from llmreflect.Chains.ModerateChain import ModerateChain
-from typing import List, Any
+from typing import List
 
 
 class DatabaseQuestionChain(BasicChain):
@@ -672,7 +672,8 @@ class DatabaseModerateNAnswerNFixChain(BasicCombinedChain):
             max_rows_return: int = 500,
             fix_patience: int = 3) -> BasicCombinedChain:
         """
-        Initialize a DatabaseModerateNAnswerNFixChain object from configuration.
+        Initialize a DatabaseModerateNAnswerNFixChain object from
+        configuration.
         Args:
             uri (str): A uri to connect to the database.
             include_tables (list): A list of names of database tables
