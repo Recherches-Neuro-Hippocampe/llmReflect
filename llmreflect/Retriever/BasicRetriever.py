@@ -54,9 +54,6 @@ class BasicQuestionModerateRetriever(BasicRetriever):
         else:
             result_dict['decision'] = False
         if explanation:
-            if result_dict['decision']:
-                result_dict['explanation'] = ""
-            else:
-                result_dict['explanation'] = \
-                    processed_llm_output.split(']')[-1]
+            result_dict['explanation'] = \
+                processed_llm_output.split('[reason]]')[-1]
         return result_dict
