@@ -1,8 +1,8 @@
-from llmreflect.Agents.BasicAgent import OpenAIAgent
+from llmreflect.Agents.BasicAgent import OpenAICore
 from llmreflect.Retriever.DatabaseRetriever import DatabaseEvaluationRetriever
 
 
-class DatabaseGradingAgent(OpenAIAgent):
+class DatabaseGradingAgent(OpenAICore):
     """
     This is the agent class use for grading database command generation.
     """

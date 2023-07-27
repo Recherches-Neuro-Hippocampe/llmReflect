@@ -1,6 +1,6 @@
 from abc import ABC, abstractclassmethod
 from llmreflect.Retriever.BasicRetriever import BasicRetriever
-from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.Agents.BasicAgent import LLMCore
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any, List
 from langchain.llms.openai import OpenAI
@@ -17,7 +17,7 @@ class BasicChain(ABC):
     A chain object must have the function to perform a job.
     Each chain is also equipped with a logger
     '''
-    def __init__(self, agent: Agent, retriever: BasicRetriever):
+    def __init__(self, agent: LLMCore, retriever: BasicRetriever):
         object.__setattr__(self, 'agent', agent)
         object.__setattr__(self, 'retriever', retriever)
         self.agent.equip_retriever(self.retriever)
@@ -40,7 +40,7 @@ class BasicChain(ABC):
             BasicChain: the Basic Chain class itself.
         """
         llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
-        agent = Agent(prompt=BasicPrompt.
+        agent = LLMCore(prompt=BasicPrompt.
                       load_prompt_from_json_file(prompt_name),
                       llm=llm)
         retriever = BasicRetriever()

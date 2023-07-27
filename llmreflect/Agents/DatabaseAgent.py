@@ -1,9 +1,9 @@
-from llmreflect.Agents.BasicAgent import OpenAIAgent
+from llmreflect.Agents.BasicAgent import OpenAICore
 from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from typing import Any
 
 
-class DatabaseAgent(OpenAIAgent):
+class DatabaseAgent(OpenAICore):
     """
     Agent class for executing database query command
     Args:

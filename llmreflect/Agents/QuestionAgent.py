@@ -1,8 +1,8 @@
-from llmreflect.Agents.BasicAgent import OpenAIAgent
+from llmreflect.Agents.BasicAgent import OpenAICore
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
 
 
-class DatabaseQuestionAgent(OpenAIAgent):
+class DatabaseQuestionAgent(OpenAICore):
     """
     Agent for creating questions based on a given database
     Args:

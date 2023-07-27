@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from uuid import UUID
-from langchain.callbacks import OpenAICallbackHandler
+from langchain.callbacks import OpenAICallbackHandler, BaseCallbackHandler
 from langchain.callbacks.openai_info import standardize_model_name
 from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
 from langchain.callbacks.openai_info import get_openai_token_cost_for_model
@@ -78,6 +78,55 @@ class OpenAITracer(OpenAICallbackHandler):
         self.traces.append(self.cur_trace)
 
 
+class GeneralTracer(BaseCallbackHandler):
+    def __init__(self, id: str = "") -> None:
+        super().__init__()
+        self.traces = []
+        self.id = id
+        self.raise_error = True
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> None:
+        self.cur_trace = LLMTRACE(input=prompts[0])
+
+    def on_chain_error(self, error: Exception | KeyboardInterrupt, *,
+                       run_id: UUID, parent_run_id: UUID | None = None,
+                       **kwargs: Any) -> Any:
+        self.cur_trace.output = str(error)
+        self.traces.append(self.cur_trace)
+        return super().on_chain_error(error,
+                                      run_id=run_id,
+                                      parent_run_id=parent_run_id,
+                                      **kwargs)
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        """Collect token usage."""
+        if response.llm_output is None:
+            return None
+        else:
+            self.cur_trace.output = response.generations[0][0].text
+        self.successful_requests += 1
+
+        if "token_usage" not in response.llm_output:
+            return None
+        token_usage = response.llm_output["token_usage"]
+
+        self.cur_trace.completion_tokens = token_usage.get(
+            "completion_tokens", 0)
+        self.cur_trace.prompt_tokens = token_usage.get("prompt_tokens", 0)
+        self.cur_trace.model_name = response.llm_output.get("model_name", "")
+        self.cur_trace.prompt_cost = 0.
+        self.cur_trace.completion_cost = 0.
+        self.cur_trace.total_cost = self.cur_trace.prompt_cost + \
+            self.cur_trace.completion_cost
+
+        self.cur_trace.total_tokens = token_usage.get("total_tokens", 0)
+        self.total_tokens += self.cur_trace.total_tokens
+        self.total_cost += self.cur_trace.total_cost
+        self.traces.append(self.cur_trace)
+
+
 class LLMTRACE:
     def __init__(
             self,
@@ -103,6 +152,9 @@ class LLMTRACE:
 openai_trace_var: ContextVar[Optional[OpenAITracer]] = ContextVar(
     "openai_trace", default=None
 )
+general_trace_var: ContextVar[Optional[GeneralTracer]] = ContextVar(
+    "general_trace", default=None
+)
 
 
 @contextmanager
@@ -114,6 +166,15 @@ def get_openai_tracer(id: str = "",
     openai_trace_var.set(cb)
     yield cb
     openai_trace_var.set(None)
+
+@contextmanager
+def get_general_tracer(id: str = "") -> \
+        Generator[GeneralTracer, None, None]:
+    """Get OpenAI callback handler in a context manager."""
+    cb = GeneralTracer(id=id)
+    general_trace_var.set(cb)
+    yield cb
+    general_trace_var.set(None)
 
 
 def check_current_openai_balance(input_prompt: str,

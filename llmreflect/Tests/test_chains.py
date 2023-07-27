@@ -87,13 +87,13 @@ def test_moderate_chain():
 @pytest.mark.skipif(bool(in_workflow()),
                     reason="Only test database operations \
                     in local env")
-def test_grading_chain():
+def test_grading_chain(n_questions=50, budget=0.1):
     from llmreflect.Chains.DatabaseChain import DatabaseQnAGradingChain
     from decouple import config
     import pandas as pd
 
-    SAVE_LOG = False
-    N_QUESTIONS = 12
+    SAVE_LOG = True
+    N_QUESTIONS = n_questions
 
     uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
 {config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
@@ -111,10 +111,13 @@ def test_grading_chain():
         g_max_output_tokens=256,
         open_ai_key=config('OPENAI_API_KEY')
     )
-    logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS)
+    logs, traces = ch.perform_cost_monitor(n_question=N_QUESTIONS,
+                                           budget=budget)
     if SAVE_LOG:
+        print(type(logs))
         df = pd.DataFrame.from_records(logs)
-        df.to_csv("self_grading.csv")
+        df.to_csv("self_grading.csv", mode='a', index=False, header=False)
+
     else:
         for log in logs:
             LOGGER.info("Question: " + log["question"])
