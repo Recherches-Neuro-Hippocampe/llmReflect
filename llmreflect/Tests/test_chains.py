@@ -70,18 +70,42 @@ def test_moderate_chain():
             'tb_patient_medications'
         ]
     )
-    result, traces = ch.perform_cost_monitor(
-        user_input="give me a list of patients",
-        with_explanation=True)
-    assert result['decision']
-    LOGGER.debug(traces_2_str(traces))
-
-    result, traces = ch.perform_cost_monitor(
-        user_input="Cats are the true rulers",
-        with_explanation=True)
-    LOGGER.debug(traces_2_str(traces))
-    assert not result['decision']
-    assert len(result['explanation']) > 0
+    q_a_pairs = [
+        {
+            "q": "give me a list of patients",
+            "a": True
+        },
+        {
+            "q": "Cats are the true rulers",
+            "a": False
+        },
+        {
+            "q": "Give me all the patients allergic to fish",
+            "a": True
+        },
+        {
+            "q": "Give me all the patients allergic to pollen",
+            "a": True
+        },
+        {
+            "q": "Give me all the patients",
+            "a": True
+        },
+        {
+            "q": "give me all the patients who live in ontario",
+            "a": True
+        }
+    ]
+    for q_a_pair in q_a_pairs:
+        result, traces = ch.perform_cost_monitor(
+            user_input=q_a_pair['q'],
+            with_explanation=True)
+        print(q_a_pair['q'])
+        print(q_a_pair['a'])
+        print(result['decision'])
+        print(result['explanation'])
+        assert result['decision'] == q_a_pair['a']
+        LOGGER.debug(traces_2_str(traces))
 
 
 @pytest.mark.skipif(bool(in_workflow()),
