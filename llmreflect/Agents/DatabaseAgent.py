@@ -1,18 +1,17 @@
-from llmreflect.Agents.BasicAgent import OpenAICore
+from llmreflect.Agents.BasicAgent import Agent, LLMCore
 from llmreflect.Retriever.DatabaseRetriever import DatabaseRetriever
 from typing import Any
+from llmreflect.Utils.log import get_logger
 
 
-class DatabaseAgent(OpenAICore):
+class DatabaseAgent(Agent):
     """
     Agent class for executing database query command
     Args:
         Agent (_type_): _description_
     """
-    def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'answer_database',
-                 max_output_tokens: int = 512,
-                 temperature: float = 0.0,
+    def __init__(self,
+                 llm_core: LLMCore,
                  split_symbol="[answer]"):
         """
         Agent class for querying database.
@@ -26,10 +25,8 @@ class DatabaseAgent(OpenAICore):
                 The lower the more consistent. Defaults to 0.0.
             split_symbol (str, optional): the string used for splitting answers
         """
-        super().__init__(open_ai_key=open_ai_key,
-                         prompt_name=prompt_name,
-                         max_output_tokens=max_output_tokens,
-                         temperature=temperature)
+        super().__init__(llm_core=llm_core)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
         object.__setattr__(self, 'split_symbol', split_symbol)
 
     def equip_retriever(self, retriever: DatabaseRetriever):

@@ -130,6 +130,89 @@ class DatabaseAnswerChain(BasicChain):
         )
         return cls(agent=agent, retriever=retriever)
 
+    # @classmethod
+    # def from_config(cls,
+    #                 llmcore="") -> BasicChain:
+    #     raise NotImplementedError
+
+    @classmethod
+    def from_openai_config(
+            cls,
+            uri: str,
+            include_tables: List,
+            open_ai_key: str,
+            prompt_name: str = 'answer_database',
+            max_output_tokens: int = 512,
+            temperature: float = 0.0,
+            sample_rows: int = 0,
+            max_rows_return=500) -> BasicChain:
+        """
+        Initialize class from configurations
+        Args:
+            uri (str): uri to connect to the database
+            include_tables (List): a list of names of database tables
+                to include
+            open_ai_key (str): openai api key
+            prompt_name (str, optional): prompt file name.
+                Defaults to 'answer_database'.
+            max_output_tokens (int, optional): Maximum completion tokens.
+                Defaults to 512.
+            temperature (float, optional): How unstable the llm is.
+                Defaults to 0.0.
+            sample_rows (int, optional): Rows from db provided to llm
+                as a sample. Defaults to 0.
+            max_rows_return (int, optional): Maximum rows retrieve from db.
+                Defaults to 500.
+
+        Returns:
+            BasicChain: A DatabaseAnswerChain object.
+        """
+        agent = DatabaseAgent.from_openai(
+            open_ai_key=open_ai_key,
+            prompt_name=prompt_name,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature)
+
+        retriever = DatabaseRetriever(
+            uri=uri,
+            include_tables=include_tables,
+            max_rows_return=max_rows_return,
+            sample_rows=sample_rows
+        )
+        return cls(agent=agent, retriever=retriever)
+
+    @classmethod
+    def from_llamacpp_config(
+            cls,
+            uri: str,
+            include_tables: list,
+            model_path: str = "/home/frank/llama.cpp/models/30b/upstage-llama-30b-instruct-2048.ggmlv3.q8_0.bin",
+            prompt_name: str = 'answer_database_short',
+            max_output_tokens: int = 300,
+            temperature: float = 0.0,
+            sample_rows: int = 0,
+            max_total_tokens: int = 2800,
+            max_rows_return: int = 500,
+            n_gpus_layers: int = 5) -> BasicChain:
+        """
+        Initialize a ModerateChain object from configurations.
+        """
+        agent = DatabaseAgent.from_llama(
+            model_path=model_path,
+            prompt_name=prompt_name,
+            max_output_tokens=max_output_tokens,
+            max_total_tokens=max_total_tokens,
+            temperature=temperature,
+            n_gpus_layers=n_gpus_layers
+        )
+        retriever = DatabaseRetriever(
+            uri=uri,
+            include_tables=include_tables,
+            max_rows_return=max_rows_return,
+            sample_rows=sample_rows
+        )
+        return cls(agent=agent, retriever=retriever)
+
     def perform(self,
                 user_input: str,
                 get_cmd: bool = True,

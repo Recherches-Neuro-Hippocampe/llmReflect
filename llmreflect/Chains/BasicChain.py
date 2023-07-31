@@ -5,7 +5,7 @@ from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from typing import Any, List
 from langchain.llms.openai import OpenAI
 from llmreflect.Utils.log import get_logger, openai_cb_2_str
-from llmreflect.Utils.log import get_openai_tracer
+from llmreflect.Utils.log import get_openai_tracer, get_general_tracer
 
 
 class BasicChain(ABC):
@@ -40,9 +40,8 @@ class BasicChain(ABC):
             BasicChain: the Basic Chain class itself.
         """
         llm = OpenAI(temperature=temperature, openai_api_key=open_ai_key)
-        agent = LLMCore(prompt=BasicPrompt.
-                      load_prompt_from_json_file(prompt_name),
-                      llm=llm)
+        agent = LLMCore(prompt=BasicPrompt.load_prompt_from_json_file(
+                    prompt_name), llm=llm)
         retriever = BasicRetriever()
         return cls(agent=agent, retriever=retriever)
 
@@ -57,6 +56,14 @@ class BasicChain(ABC):
         return result
 
     def perform_cost_monitor(self, budget: float = 100, **kwargs: Any):
+        """
+        Specific for OpenAI API use.
+        Args:
+            budget (float, optional): _description_. Defaults to 100.
+
+        Returns:
+            _type_: _description_
+        """
         with get_openai_tracer(id=self.__class__.__name__,
                                budget=budget) as cb:
             try:
@@ -64,6 +71,23 @@ class BasicChain(ABC):
             except Exception as e:
                 result = str(e)
                 self.logger.warning(cb.cur_trace.output)
+        self.logger.cost(openai_cb_2_str(cb))
+        return result, cb
+
+    def perform_monitor(self, **kwargs: Any):
+        """
+        Specific for Llamacpp use.
+        Args:
+        Returns:
+            _type_: _description_
+        """
+        with get_general_tracer(id=self.__class__.__name__) as cb:
+            try:
+                result = self.perform(**kwargs)
+            except Exception as e:
+                result = str(e)
+                self.logger.warning(cb.cur_trace.output)
+        print(cb.cur_trace.output)
         self.logger.cost(openai_cb_2_str(cb))
         return result, cb
 
@@ -81,8 +105,8 @@ class BasicCombinedChain(BasicChain, ABC):
 
     @abstractclassmethod
     def from_config(cls, **kwargs: Any):
-        return
+        pass
 
     @abstractclassmethod
     def perform(self, **kwargs: Any):
-        return
+        pass

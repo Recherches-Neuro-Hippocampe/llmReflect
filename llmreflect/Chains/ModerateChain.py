@@ -18,11 +18,15 @@ class ModerateChain(BasicChain):
 
     @classmethod
     def from_config(cls,
-                    open_ai_key: str,
-                    include_tables: list,
-                    prompt_name: str = 'moderate_database',
-                    max_output_tokens: int = 512,
-                    temperature: float = 0.0) -> BasicChain:
+                    llmcore="") -> BasicChain:
+        raise NotImplementedError
+
+    @classmethod
+    def from_openai_config(cls, open_ai_key: str,
+                           include_tables: list,
+                           prompt_name: str = 'moderate_database',
+                           max_output_tokens: int = 512,
+                           temperature: float = 0.0) -> BasicChain:
         """
         Initialize a ModerateChain object from configurations.
         Args:
@@ -38,10 +42,44 @@ class ModerateChain(BasicChain):
         Returns:
             BasicChain: _description_
         """
-        agent = DatabaseModerateAgent(
+        agent = DatabaseModerateAgent.from_openai(
             open_ai_key=open_ai_key,
             prompt_name=prompt_name,
             max_output_tokens=max_output_tokens,
+            temperature=temperature
+        )
+        retriever = BasicQuestionModerateRetriever(
+            include_tables=include_tables)
+        return cls(agent=agent, retriever=retriever)
+
+    @classmethod
+    def from_llamacpp_config(
+            cls,
+            include_tables: list,
+            model_path: str = "/home/frank/llama.cpp/models/30b/upstage-llama-30b-instruct-2048.ggmlv3.q8_0.bin",
+            prompt_name: str = 'moderate_database',
+            max_output_tokens: int = 512,
+            temperature: float = 0.0) -> BasicChain:
+        """
+        Initialize a ModerateChain object from configurations.
+        Args:
+            open_ai_key (str): Openai api key.
+            include_tables (list): A list of database tables names to include.
+            prompt_name (str, optional): Prompt file name.
+                Defaults to 'moderate_database'.
+            max_output_tokens (int, optional): Maximum completion tokens.
+                Defaults to 512.
+            temperature (float, optional): The higher the more unstable.
+                Defaults to 0.0.
+
+        Returns:
+            BasicChain: _description_
+        """
+        agent = DatabaseModerateAgent.from_llama(
+            model_path=model_path,
+            prompt_name=prompt_name,
+            max_output_tokens=max_output_tokens,
+            max_total_tokens=2048,
             temperature=temperature
         )
         retriever = BasicQuestionModerateRetriever(

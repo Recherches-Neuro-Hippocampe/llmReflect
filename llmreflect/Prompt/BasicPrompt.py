@@ -241,4 +241,4 @@ class BasicPrompt(object):
                 txt += "{"
                 txt += key
                 txt += "}"
-        return txt
+        return txt + "\n"

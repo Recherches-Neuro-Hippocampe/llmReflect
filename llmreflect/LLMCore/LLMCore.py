@@ -15,6 +15,7 @@ import inspect
 from langchain.load.dump import dumpd
 from langchain.schema import RUN_KEY, RunInfo, LLMResult
 from langchain.llms import LlamaCpp
+import os
 
 Callbacks = Optional[Union[List[BaseCallbackHandler], BaseCallbackManager]]
 
@@ -55,15 +56,15 @@ class LLMCore(LLMChain, ABC):
         super().__init__(prompt=prompt.get_langchain_prompt_template(),
                          llm=llm)
         """
-        Abstract class for core functions of LLM, 
-        inherit from the LLM chain class. 
+        Abstract class for core functions of LLM,
+        inherit from the LLM chain class.
         Args:
             prompt (BasicPrompt): Prompt class to use.
             llm_model (BaseLanguageModel): llm class to use
         """
         object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
         object.__setattr__(self, "max_output_tokens", self.llm.max_tokens)
-        object.__setattr__(self, "model_name", self.llm.model_name)
+        object.__setattr__(self, "model_name", "LLM")
 
     def get_inputs(self) -> List[str]:
         """
@@ -99,6 +100,7 @@ class OpenAICore(LLMCore):
         llm.max_tokens = max_output_tokens
         super().__init__(prompt=prompt,
                          llm=llm)
+        object.__setattr__(self, "model_name", self.llm.model_name)
 
     def get_inputs(self) -> List[str]:
         """
@@ -280,6 +282,8 @@ class LlamacppCore(LLMCore):
 
         super().__init__(prompt=prompt,
                          llm=llm)
+        model_name = os.path.basename(self.llm.model_path)
+        object.__setattr__(self, "model_name", model_name)
 
     def get_inputs(self) -> List[str]:
         """
@@ -360,6 +364,7 @@ class LlamacppCore(LLMCore):
         except (KeyboardInterrupt, Exception) as e:
             run_manager.on_chain_error(e)
             raise e
+
         run_manager.on_chain_end(outputs)
         final_outputs: Dict[str, Any] = self.prep_outputs(
             inputs, outputs, return_only_outputs
@@ -397,10 +402,31 @@ class LlamacppCore(LLMCore):
         will be stopped when the cost is going to exceed the budget.
         """
         prompts, stop = self.prep_prompts(input_list, run_manager=run_manager)
-
-        return self.llm.generate_prompt(
+        llmresult = self.llm.generate_prompt(
             prompts,
             stop,
             callbacks=run_manager.get_child() if run_manager else None,
             **self.llm_kwargs,
         )
+
+        prompt_tokens = 0
+        for prompt in prompts:
+            prompt_tokens += self.llm.get_num_tokens(str(prompt))
+        completion_tokens = 0
+        for completion in llmresult.generations:
+            for candidate in completion:
+                completion_tokens += self.llm.get_num_tokens(candidate.text)
+        llm_output_info = {
+            "token_usage": {
+                "completion_tokens": completion_tokens,
+                "prompt_tokens": prompt_tokens,
+                "total_tokens": completion_tokens + prompt_tokens
+            },
+            "model_name": os.path.basename(self.llm.model_path)
+        }
+
+        llmresult.__setattr__("llm_output", llm_output_info)
+        for handler in run_manager.handlers:
+            handler.on_llm_end(response=llmresult)
+
+        return llmresult

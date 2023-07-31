@@ -2,7 +2,8 @@ import logging
 import os
 import shutil
 from uuid import UUID
-from langchain.callbacks import OpenAICallbackHandler, BaseCallbackHandler
+from langchain.callbacks import OpenAICallbackHandler
+from langchain.callbacks.base import BaseCallbackHandler
 from langchain.callbacks.openai_info import standardize_model_name
 from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
 from langchain.callbacks.openai_info import get_openai_token_cost_for_model
@@ -78,12 +79,15 @@ class OpenAITracer(OpenAICallbackHandler):
         self.traces.append(self.cur_trace)
 
 
-class GeneralTracer(BaseCallbackHandler):
+class GeneralTracer(OpenAICallbackHandler):
     def __init__(self, id: str = "") -> None:
         super().__init__()
         self.traces = []
         self.id = id
         self.raise_error = True
+        self.total_cost = 0.
+        self.total_tokens = 0.
+        self.successful_requests = 0
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
@@ -103,27 +107,26 @@ class GeneralTracer(BaseCallbackHandler):
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Collect token usage."""
         if response.llm_output is None:
-            return None
+            return
         else:
-            self.cur_trace.output = response.generations[0][0].text
-        self.successful_requests += 1
+            completion = response.generations[0][0].text
 
-        if "token_usage" not in response.llm_output:
-            return None
-        token_usage = response.llm_output["token_usage"]
+            self.cur_trace.output = completion
+            self.successful_requests += 1
+            token_usage = response.llm_output["token_usage"]
 
-        self.cur_trace.completion_tokens = token_usage.get(
-            "completion_tokens", 0)
-        self.cur_trace.prompt_tokens = token_usage.get("prompt_tokens", 0)
-        self.cur_trace.model_name = response.llm_output.get("model_name", "")
-        self.cur_trace.prompt_cost = 0.
-        self.cur_trace.completion_cost = 0.
-        self.cur_trace.total_cost = self.cur_trace.prompt_cost + \
-            self.cur_trace.completion_cost
+            self.cur_trace.completion_tokens = token_usage.get(
+                "completion_tokens", 0)
+            self.cur_trace.prompt_tokens = token_usage.get("prompt_tokens", 0)
+            self.cur_trace.model_name = response.llm_output.get("model_name", "")
+            self.cur_trace.prompt_cost = 0.
+            self.cur_trace.completion_cost = 0.
+            self.cur_trace.total_cost = self.cur_trace.prompt_cost + \
+                self.cur_trace.completion_cost
 
-        self.cur_trace.total_tokens = token_usage.get("total_tokens", 0)
-        self.total_tokens += self.cur_trace.total_tokens
-        self.total_cost += self.cur_trace.total_cost
+            self.cur_trace.total_tokens = token_usage.get("total_tokens", 0)
+            self.total_tokens += self.cur_trace.total_tokens
+            self.total_cost += self.cur_trace.total_cost
         self.traces.append(self.cur_trace)
 
 
