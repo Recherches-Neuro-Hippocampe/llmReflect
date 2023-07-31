@@ -94,6 +94,36 @@ def test_moderate_chain():
         {
             "q": "give me all the patients who live in ontario",
             "a": True
+        },
+        {
+            "q": "give me a list of overweight patients who take donezepil",
+            "a": True
+        },
+        {
+            "q": "Average mmse scores for patients per province. \
+Round values to 2 decimals",
+            "a": True
+        },
+        {
+            "q": "Frequencies for patients ages in bins (range of 2), \
+and patients older than 40",
+            "a": True
+        },
+        {
+            "q": "Give me max, min, avg, median and standard deviation on \
+patients ages",
+            "a": True
+        },
+        {
+            "q": "Give me the necessary information for me to be able to \
+create a boxplot chart with patients ages. Ignore outliers. Round values \
+to 2 decimals",
+            "a": True
+        },
+        {
+            "q": "Correlation matrix between patients ages (bins of 10) \
+and mmse scores of patients older than 60 years old",
+            "a": True
         }
     ]
     for q_a_pair in q_a_pairs:
@@ -158,8 +188,10 @@ def test_grading_chain():
                     reason="Only test database operations \
                     in local env")
 def test_self_fix_chain():
-    from llmreflect.Chains.DatabaseChain import DatabaseQuestionChain,\
-        DatabaseAnswerChain, DatabaseSelfFixChain
+    from llmreflect.Chains.DatabaseChain import DatabaseQuestionChain
+    from llmreflect.Chains.DatabaseChain import DatabaseAnswerChain
+    from llmreflect.Chains.DatabaseChain import DatabaseSelfFixChain
+
     from decouple import config
 
     uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
