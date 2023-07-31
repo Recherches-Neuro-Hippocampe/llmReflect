@@ -188,8 +188,10 @@ def test_grading_chain():
                     reason="Only test database operations \
                     in local env")
 def test_self_fix_chain():
-    from llmreflect.Chains.DatabaseChain import DatabaseQuestionChain,\
-        DatabaseAnswerChain, DatabaseSelfFixChain
+    from llmreflect.Chains.DatabaseChain import \
+        DatabaseQuestionChain,\
+        DatabaseAnswerChain,\
+        DatabaseSelfFixChain
     from decouple import config
 
     uri = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
