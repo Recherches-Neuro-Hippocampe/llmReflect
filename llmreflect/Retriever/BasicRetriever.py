@@ -50,9 +50,11 @@ class BasicQuestionModerateRetriever(BasicRetriever):
         processed_llm_output = llm_output.strip("\n").strip(' ')
         result_dict = {}
         if "[APPROVE]" in processed_llm_output:
-            result_dict['decision'] = True
+            result_dict['decision'] = 1
+        elif "[IRRELEVANT]" in processed_llm_output:
+            result_dict['decision'] = 0
         else:
-            result_dict['decision'] = False
+            result_dict['decision'] = -1
         if explanation:
             result_dict['explanation'] = \
                 processed_llm_output.split('[reason]]')[-1]
