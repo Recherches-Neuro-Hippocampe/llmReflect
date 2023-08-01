@@ -2,7 +2,7 @@ from llmreflect.Agents.ModerateAgent import DatabaseModerateAgent
 from llmreflect.Chains.BasicChain import BasicChain
 from llmreflect.Retriever.BasicRetriever import BasicQuestionModerateRetriever
 from typing import Any
-
+from llmreflect.LLMCore.LLMCore import LOCAL_MODEL_PATH
 
 class ModerateChain(BasicChain):
     def __init__(self, agent: DatabaseModerateAgent,
@@ -56,7 +56,7 @@ class ModerateChain(BasicChain):
     def from_llamacpp_config(
             cls,
             include_tables: list,
-            model_path: str = "/home/frank/llama.cpp/models/30b/upstage-llama-30b-instruct-2048.ggmlv3.q8_0.bin",
+            model_path: str = LOCAL_MODEL_PATH.upstage_65_b,
             prompt_name: str = 'moderate_database',
             max_output_tokens: int = 512,
             temperature: float = 0.0) -> BasicChain:

@@ -21,6 +21,14 @@ Callbacks = Optional[Union[List[BaseCallbackHandler], BaseCallbackManager]]
 
 
 @dataclass
+class LOCAL_MODEL_PATH:
+    base_dir = "/home/frank/llama.cpp/models/"
+    upstage_65_b = os.path.join(base_dir,
+                                "65b/upstage-llama-2-70b-instruct-v2.ggmlv3.q5_K_M.bin")
+    upstage_30_b = os.path.join(base_dir,
+                                "30b/upstage-llama-30b-instruct-2048.ggmlv3.q8_0.bin")
+
+@dataclass
 class LLM_BACKBONE_MODEL:
     """
     LLM names used for referencing

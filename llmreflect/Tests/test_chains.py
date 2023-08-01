@@ -59,17 +59,24 @@ def in_workflow():
                     in local env")
 def test_moderate_chain():
     from llmreflect.Chains.ModerateChain import ModerateChain
-    from decouple import config
-    ch = ModerateChain.from_config(
-        open_ai_key=config('OPENAI_API_KEY'),
-        include_tables=[
+    # from decouple import config
+    # ch = ModerateChain.from_config(
+    #     open_ai_key=config('OPENAI_API_KEY'),
+    #     include_tables=[
+    #         'tb_patient',
+    #         'tb_patients_allergies',
+    #         'tb_appointment_patients',
+    #         'tb_patient_mmse_and_moca_scores',
+    #         'tb_patient_medications'
+    #     ]
+    # )
+    ch = ModerateChain.from_llamacpp_config(include_tables=[
             'tb_patient',
             'tb_patients_allergies',
             'tb_appointment_patients',
             'tb_patient_mmse_and_moca_scores',
             'tb_patient_medications'
-        ]
-    )
+        ])
     q_a_pairs = [
         {
             "q": "give me a list of patients",

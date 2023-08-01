@@ -7,7 +7,7 @@ from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever, \
     DatabaseRetriever, DatabaseEvaluationRetriever
 from llmreflect.Chains.ModerateChain import ModerateChain
 from typing import List
-
+from llmreflect.LLMCore.LLMCore import LOCAL_MODEL_PATH
 
 class DatabaseQuestionChain(BasicChain):
     def __init__(self, agent: DatabaseQuestionAgent,
@@ -186,7 +186,7 @@ class DatabaseAnswerChain(BasicChain):
             cls,
             uri: str,
             include_tables: list,
-            model_path: str = "/home/frank/llama.cpp/models/30b/upstage-llama-30b-instruct-2048.ggmlv3.q8_0.bin",
+            model_path: str = LOCAL_MODEL_PATH.upstage_65_b,
             prompt_name: str = 'answer_database_short',
             max_output_tokens: int = 300,
             temperature: float = 0.0,
