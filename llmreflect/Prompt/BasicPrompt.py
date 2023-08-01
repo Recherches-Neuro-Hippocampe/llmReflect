@@ -115,6 +115,7 @@ class BasicPrompt(object):
         self.string_temp += self.input_format
         self.string_temp += "\n\n"
         self.string_temp += self.completion_head_up
+        self.string_temp += "\n"
 
     def get_langchain_prompt_template(self):
         return self.prompt_template
