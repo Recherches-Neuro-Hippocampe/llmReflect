@@ -329,9 +329,10 @@ def get_logger(name: str = "Default") -> logging.Logger:
             tmp_log_dir, 'llmreflect.log'), mode='a+',)
     formatter = logging.Formatter(format_str)
     handler_file.setFormatter(formatter)
-
-    logger.addHandler(handler_std)
-    logger.addHandler(handler_file)
+    if len(logger.handlers) < 2:
+        logger.addHandler(handler_std)
+        logger.addHandler(handler_file)
+    logger.propagate = False
     return logger
 
 

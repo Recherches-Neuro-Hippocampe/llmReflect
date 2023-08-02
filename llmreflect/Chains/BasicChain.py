@@ -71,7 +71,9 @@ class BasicChain(ABC):
             except Exception as e:
                 result = str(e)
                 self.logger.warning(cb.cur_trace.output)
+        self.logger.propagate = False
         self.logger.cost(openai_cb_2_str(cb))
+
         return result, cb
 
     def perform_monitor(self, **kwargs: Any):
