@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmreflect"
-version = "0.1.8"
+version = "0.1.9"
 description = "a package for llm self-reflection"
 authors = ["alchemistwu <alchemistwu0521@gmail.com>"]
 readme = "README.md"
@@ -15,7 +15,9 @@ langchain = "^0.0.235"
 SQLAlchemy = "^2.0.17"
 flake8 = "^6.0.0"
 pytest = "^7.4.0"
-tiktoken = "^0.4.0" 
+tiktoken = "^0.4.0"
+torch="^2.0.1"
+pynvml="^11.5.0"
 
 [build-system]
 requires = ["poetry-core"]
