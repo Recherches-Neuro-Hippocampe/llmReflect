@@ -18,6 +18,8 @@ pgeocode = "*"
 SQLAlchemy = "*"
 pytest="*"
 tiktoken="*"
+torch="*"
+pynvml="*"
 [dev-packages]
 
 [requires]

@@ -1,34 +1,20 @@
-from llmreflect.Agents.BasicAgent import OpenAICore
+from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.LLMCore.LLMCore import LLMCore
 from llmreflect.Retriever.DatabaseRetriever import DatabaseQuestionRetriever
+from llmreflect.Utils.log import get_logger
 
 
-class DatabaseQuestionAgent(OpenAICore):
-    """
-    Agent for creating questions based on a given database
-    Args:
-        Agent (_type_): _description_
-    """
-    def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'question_database',
-                 max_output_tokens: int = 512,
-                 temperature: float = 0.7):
+class DatabaseQuestionAgent(Agent):
+    PROMPT_NAME = "question_database"
+
+    def __init__(self, llm_core: LLMCore, **kwargs):
         """
         Agent for creating questions based on a given database
-        Args:
-            open_ai_key (str): API key to connect to chatgpt service.
-            prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'question_database'.
-            max_output_tokens (int, optional): maximum completion length.
-                Defaults to 512.
-            temperature (float, optional): how consistent the llm performs.
-                The lower the more consistent. To obtain diverse questions,
-                a high temperature is recommended.
-                Defaults to 0.0.
+         Args:
+            llm_core (LLMCore): the llm core to use for prediction.
         """
-        super().__init__(open_ai_key=open_ai_key,
-                         prompt_name=prompt_name,
-                         max_output_tokens=max_output_tokens,
-                         temperature=temperature)
+        super().__init__(llm_core=llm_core, **kwargs)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
 
     def equip_retriever(self, retriever: DatabaseQuestionRetriever):
         # notice it requires DatabaseQuestionRetriever

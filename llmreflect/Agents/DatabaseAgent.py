@@ -5,14 +5,12 @@ from llmreflect.Utils.log import get_logger
 
 
 class DatabaseAgent(Agent):
-    """
-    Agent class for executing database query command
-    Args:
-        Agent (_type_): _description_
-    """
+    PROMPT_NAME = "answer_database"
+
     def __init__(self,
                  llm_core: LLMCore,
-                 split_symbol="[answer]"):
+                 split_symbol="[answer]",
+                 **kwargs):
         """
         Agent class for querying database.
         Args:
@@ -25,12 +23,12 @@ class DatabaseAgent(Agent):
                 The lower the more consistent. Defaults to 0.0.
             split_symbol (str, optional): the string used for splitting answers
         """
-        super().__init__(llm_core=llm_core)
+        super().__init__(llm_core=llm_core, **kwargs)
         object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
         object.__setattr__(self, 'split_symbol', split_symbol)
 
     def equip_retriever(self, retriever: DatabaseRetriever):
-        """_summary_
+        """Equip DatabaseRetriever for an instance of DatabaseAgent.
 
         Args:
             retriever (DatabaseRetriever): use database retriever
@@ -129,6 +127,8 @@ class DatabaseAgent(Agent):
 
 
 class DatabaseSelfFixAgent(DatabaseAgent):
+    PROMPT_NAME = "fix_database"
+
     def predict_sql_cmd(self, user_input: str, history: str,
                         his_error: str) -> str:
         """

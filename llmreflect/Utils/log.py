@@ -3,7 +3,6 @@ import os
 import shutil
 from uuid import UUID
 from langchain.callbacks import OpenAICallbackHandler
-from langchain.callbacks.base import BaseCallbackHandler
 from langchain.callbacks.openai_info import standardize_model_name
 from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
 from langchain.callbacks.openai_info import get_openai_token_cost_for_model
@@ -14,30 +13,69 @@ from contextvars import ContextVar
 import tiktoken
 
 
-class OpenAITracer(OpenAICallbackHandler):
-    def __init__(self, id: str = "", budget: float = 0.01) -> None:
+class GeneralTracer(OpenAICallbackHandler):
+    def __init__(self, id: str = "", budget: float = 0.1) -> None:
+        """ This class is used for tracing LLM behaviors.
+        Initialize from id and budget.
+        Args:
+            id (str, optional): A id to give to the tracer.
+                Defaults to "".
+            budget (float, optional): A money budget to run the LLM.
+                Designed for OpenAI Api, prevent over spending.
+                Defaults to 0.1.
+        """
         super().__init__()
         self.traces = []
         self.id = id
         self.raise_error = True
+        self.total_cost = 0.
+        self.total_tokens = 0.
+        self.successful_requests = 0
         self._budget = budget
 
     @property
-    def budget(self):
+    def budget(self) -> float:
+        """Return the budget
+
+        Returns:
+            float: Budget (Money allowed to run the model)
+        """
         return self._budget
 
     @property
-    def budget_rest(self):
+    def budget_rest(self) -> float:
+        """Return rest of the budget.
+
+        Returns:
+            float: Budget (Money left to run the model)
+        """
         return self._budget - self.total_cost
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
+        """Called when LLM start to predict.
+
+        Args:
+            serialized (Dict[str, Any]): Not used but required by Langchain.
+            prompts (List[str]): A list of prompts.(LLM input)
+        """
         self.cur_trace = LLMTRACE(input=prompts[0])
 
     def on_chain_error(self, error: Exception | KeyboardInterrupt, *,
                        run_id: UUID, parent_run_id: UUID | None = None,
                        **kwargs: Any) -> Any:
+        """Called when LLM encounter into an error.
+
+        Args:
+            error (Exception | KeyboardInterrupt): Error encountered.
+            run_id (UUID): Required by Langchain.
+            parent_run_id (UUID | None, optional): Required by Langchain.
+                Defaults to None.
+
+        Returns:
+            Any: super().on_chain_error
+        """
         self.cur_trace.output = str(error)
         self.traces.append(self.cur_trace)
         return super().on_chain_error(error,
@@ -46,7 +84,14 @@ class OpenAITracer(OpenAICallbackHandler):
                                       **kwargs)
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
-        """Collect token usage."""
+        """Called when LLM finished completion.
+
+        Args:
+            response (LLMResult): Langchain type class.
+
+        Returns:
+            Nah.
+        """
         if response.llm_output is None:
             return None
         else:
@@ -79,57 +124,6 @@ class OpenAITracer(OpenAICallbackHandler):
         self.traces.append(self.cur_trace)
 
 
-class GeneralTracer(OpenAICallbackHandler):
-    def __init__(self, id: str = "") -> None:
-        super().__init__()
-        self.traces = []
-        self.id = id
-        self.raise_error = True
-        self.total_cost = 0.
-        self.total_tokens = 0.
-        self.successful_requests = 0
-
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> None:
-        self.cur_trace = LLMTRACE(input=prompts[0])
-
-    def on_chain_error(self, error: Exception | KeyboardInterrupt, *,
-                       run_id: UUID, parent_run_id: UUID | None = None,
-                       **kwargs: Any) -> Any:
-        self.cur_trace.output = str(error)
-        self.traces.append(self.cur_trace)
-        return super().on_chain_error(error,
-                                      run_id=run_id,
-                                      parent_run_id=parent_run_id,
-                                      **kwargs)
-
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
-        """Collect token usage."""
-        if response.llm_output is None:
-            return
-        else:
-            completion = response.generations[0][0].text
-
-            self.cur_trace.output = completion
-            self.successful_requests += 1
-            token_usage = response.llm_output["token_usage"]
-
-            self.cur_trace.completion_tokens = token_usage.get(
-                "completion_tokens", 0)
-            self.cur_trace.prompt_tokens = token_usage.get("prompt_tokens", 0)
-            self.cur_trace.model_name = response.llm_output.get("model_name", "")
-            self.cur_trace.prompt_cost = 0.
-            self.cur_trace.completion_cost = 0.
-            self.cur_trace.total_cost = self.cur_trace.prompt_cost + \
-                self.cur_trace.completion_cost
-
-            self.cur_trace.total_tokens = token_usage.get("total_tokens", 0)
-            self.total_tokens += self.cur_trace.total_tokens
-            self.total_cost += self.cur_trace.total_cost
-        self.traces.append(self.cur_trace)
-
-
 class LLMTRACE:
     def __init__(
             self,
@@ -141,6 +135,23 @@ class LLMTRACE:
             completion_cost: float = 0.,
             prompt_cost: float = 0.,
     ) -> None:
+        """A class to store required information to track LLM behabior.
+        Args:
+            input (str, optional): LLM input.
+                Defaults to "".
+            output (str, optional): LLM output.
+                Defaults to "".
+            completion_tokens (int, optional):
+                Number of tokens predicted by LLM. Defaults to 0.
+            prompt_tokens (int, optional):
+                Number of input tokens. Defaults to 0.
+            model_name (str, optional): Name of the model. Defaults to "".
+            completion_cost (float, optional):
+                Cost for completion, only used by OpenAI api. Defaults to 0..
+            prompt_cost (float, optional):
+                Cost for evaluating the input prompt,
+                only used for OpenAI api. Defaults to 0.
+        """
         self.input = input
         self.output = output
         self.completion_tokens = completion_tokens
@@ -152,29 +163,20 @@ class LLMTRACE:
         self.total_tokens = prompt_tokens + completion_tokens
 
 
-openai_trace_var: ContextVar[Optional[OpenAITracer]] = ContextVar(
-    "openai_trace", default=None
-)
 general_trace_var: ContextVar[Optional[GeneralTracer]] = ContextVar(
     "general_trace", default=None
 )
 
 
 @contextmanager
-def get_openai_tracer(id: str = "",
-                      budget: float = 0.1) -> \
-        Generator[OpenAITracer, None, None]:
-    """Get OpenAI callback handler in a context manager."""
-    cb = OpenAITracer(id=id, budget=budget)
-    openai_trace_var.set(cb)
-    yield cb
-    openai_trace_var.set(None)
-
-@contextmanager
-def get_general_tracer(id: str = "") -> \
+def get_tracer(id: str = "", budget: float = 0.1) -> \
         Generator[GeneralTracer, None, None]:
-    """Get OpenAI callback handler in a context manager."""
-    cb = GeneralTracer(id=id)
+    """Get local llm callback handler in a context manager.
+
+    Yields:
+        GeneralTracer: An instance of the GeneralTracer class.
+    """
+    cb = GeneralTracer(id=id, budget=budget)
     general_trace_var.set(cb)
     yield cb
     general_trace_var.set(None)
@@ -196,9 +198,9 @@ def check_current_openai_balance(input_prompt: str,
             when logger provided.
 
     Returns:
-        bool: _description_
+        bool: Whether to continue running LLM.
     """
-    openai_tracer = openai_trace_var.get()
+    openai_tracer = general_trace_var.get()
     encoding = tiktoken.get_encoding("cl100k_base")
     input_tokens = len(encoding.encode(input_prompt))
     input_cost = get_openai_token_cost_for_model(
@@ -336,7 +338,7 @@ def get_logger(name: str = "Default") -> logging.Logger:
     return logger
 
 
-def export_log(dir: str):
+def export_log(file_path: str):
     """A simple interface copying the log file to a designated directory.
 
     Args:
@@ -348,7 +350,7 @@ def export_log(dir: str):
     n_f = 0
     for file_name in os.listdir(tmp_log_dir):
         try:
-            shutil.copy2(os.path.join(tmp_log_dir, file_name), dir)
+            shutil.copy2(os.path.join(tmp_log_dir, file_name), file_path)
             n_s += 1
         except Exception as e:
             logger.error(str(e))
@@ -378,7 +380,7 @@ def message(msg, color=None):
     print(f'{COLORS[color]}{msg}{COLORS["reset"]}')
 
 
-def openai_cb_2_str(cb: OpenAITracer) -> str:
+def tracer_2_str(cb: GeneralTracer) -> str:
     """
     converting openai tracer info to one string.
     Args:
@@ -394,10 +396,10 @@ def openai_cb_2_str(cb: OpenAITracer) -> str:
     return tmp_str
 
 
-def traces_2_str(cb: OpenAITracer) -> str:
+def traces_2_str(cb: GeneralTracer) -> str:
     """
     converting openai tracer info to one string.
-    Similar to openai_cb_2_str function but with more details
+    Similar to tracer_2_str function but with more details
     Args:
         cb (OpenAITracer): tracer/callback handlers for openai
 
