@@ -19,7 +19,7 @@ import logging
 from pydantic import Field, root_validator
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 import gc
-import torch
+
 from decouple import config
 logger = logging.getLogger(__name__)
 
@@ -131,12 +131,23 @@ def singleton(cls):
     return get_instance
 
 
+def in_workflow():
+    return os.getenv("GITHUB_ACTIONS")\
+        or os.getenv("TRAVIS") \
+        or os.getenv("CIRCLECI") \
+        or os.getenv("GITLAB_CI")
+
+
 def report_gpu():
     """Check gpu usage and also clean the cache on gpu.
     """
-    print(torch.cuda.list_gpu_processes())
-    gc.collect()
-    torch.cuda.empty_cache()
+    if not bool(in_workflow):
+        import torch
+        print(torch.cuda.list_gpu_processes())
+        gc.collect()
+        torch.cuda.empty_cache()
+    else:
+        pass
 
 
 @singleton
