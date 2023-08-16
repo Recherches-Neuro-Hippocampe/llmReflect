@@ -4,10 +4,9 @@ Module llmreflect.Agents.DatabaseAgent
 Classes
 -------
 
-`DatabaseAgent(open_ai_key: str, prompt_name: str = 'answer_database', max_output_tokens: int = 512, temperature: float = 0.0, split_symbol='[answer]')`
-:   Agent class for executing database query command
-    Args:
-        Agent (_type_): _description_
+`DatabaseAgent(llm_core: llmreflect.LLMCore.LLMCore.LLMCore, split_symbol='[answer]', **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     Agent class for querying database.
     Args:
@@ -22,23 +21,23 @@ Classes
 
     ### Ancestors (in MRO)
 
-    * llmreflect.Agents.BasicAgent.OpenAIAgent
     * llmreflect.Agents.BasicAgent.Agent
-    * langchain.chains.llm.LLMChain
-    * langchain.chains.base.Chain
-    * langchain.load.serializable.Serializable
-    * pydantic.main.BaseModel
-    * pydantic.utils.Representation
+    * llmreflect.Agents.BasicAgent.BasicAgent
     * abc.ABC
 
     ### Descendants
 
     * llmreflect.Agents.DatabaseAgent.DatabaseSelfFixAgent
 
+    ### Class variables
+
+    `PROMPT_NAME`
+    :
+
     ### Methods
 
     `equip_retriever(self, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseRetriever)`
-    :   _summary_
+    :   Equip DatabaseRetriever for an instance of DatabaseAgent.
         
         Args:
             retriever (DatabaseRetriever): use database retriever
@@ -84,10 +83,9 @@ Classes
         Returns:
             str: gross output of the llm attempt for generating sql cmd.
 
-`DatabaseSelfFixAgent(open_ai_key: str, prompt_name: str = 'answer_database', max_output_tokens: int = 512, temperature: float = 0.0, split_symbol='[answer]')`
-:   Agent class for executing database query command
-    Args:
-        Agent (_type_): _description_
+`DatabaseSelfFixAgent(llm_core: llmreflect.LLMCore.LLMCore.LLMCore, split_symbol='[answer]', **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     Agent class for querying database.
     Args:
@@ -103,14 +101,14 @@ Classes
     ### Ancestors (in MRO)
 
     * llmreflect.Agents.DatabaseAgent.DatabaseAgent
-    * llmreflect.Agents.BasicAgent.OpenAIAgent
     * llmreflect.Agents.BasicAgent.Agent
-    * langchain.chains.llm.LLMChain
-    * langchain.chains.base.Chain
-    * langchain.load.serializable.Serializable
-    * pydantic.main.BaseModel
-    * pydantic.utils.Representation
+    * llmreflect.Agents.BasicAgent.BasicAgent
     * abc.ABC
+
+    ### Class variables
+
+    `PROMPT_NAME`
+    :
 
     ### Methods
 

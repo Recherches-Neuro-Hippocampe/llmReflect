@@ -1,30 +1,20 @@
-from llmreflect.Agents.BasicAgent import OpenAIAgent
+from llmreflect.Agents.BasicAgent import Agent
 from llmreflect.Retriever.DatabaseRetriever import DatabaseEvaluationRetriever
+from llmreflect.LLMCore.LLMCore import LLMCore
+from llmreflect.Utils.log import get_logger
 
 
-class DatabaseGradingAgent(OpenAIAgent):
-    """
-    This is the agent class use for grading database command generation.
-    """
-    def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'grading_database',
-                 max_output_tokens: int = 512,
-                 temperature: float = 0.0):
+class DatabaseGradingAgent(Agent):
+    PROMPT_NAME = "grading_database"
+
+    def __init__(self, llm_core: LLMCore, **kwargs):
         """
-        Agent class for grading the performance of database command generator.
+        agent class use for grading database command generation.
         Args:
-            open_ai_key (str): API key to connect to chatgpt service.
-            prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'grading_database'.
-            max_output_tokens (int, optional): maximum completion length.
-                Defaults to 512.
-            temperature (float, optional): how consistent the llm performs.
-                The lower the more consistent. Defaults to 0.0.
+            llm_core (LLMCore): the llm core to use for prediction.
         """
-        super().__init__(open_ai_key=open_ai_key,
-                         prompt_name=prompt_name,
-                         max_output_tokens=max_output_tokens,
-                         temperature=temperature)
+        super().__init__(llm_core=llm_core, **kwargs)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
 
     def equip_retriever(self, retriever: DatabaseEvaluationRetriever):
         object.__setattr__(self, 'retriever', retriever)

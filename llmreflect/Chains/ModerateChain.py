@@ -5,8 +5,12 @@ from typing import Any
 
 
 class ModerateChain(BasicChain):
+    AgentClass = DatabaseModerateAgent
+    RetrieverClass = BasicQuestionModerateRetriever
+
     def __init__(self, agent: DatabaseModerateAgent,
-                 retriever: BasicQuestionModerateRetriever):
+                 retriever: BasicQuestionModerateRetriever,
+                 **kwargs):
         """
         A chain for filtering out toxic questions and injection attacks.
         Args:
@@ -14,39 +18,7 @@ class ModerateChain(BasicChain):
             retriever (BasicQuestionModerateRetriever):
                 BasicQuestionModerateRetriever
         """
-        super().__init__(agent, retriever)
-
-    @classmethod
-    def from_config(cls,
-                    open_ai_key: str,
-                    include_tables: list,
-                    prompt_name: str = 'moderate_database',
-                    max_output_tokens: int = 512,
-                    temperature: float = 0.0) -> BasicChain:
-        """
-        Initialize a ModerateChain object from configurations.
-        Args:
-            open_ai_key (str): Openai api key.
-            include_tables (list): A list of database tables names to include.
-            prompt_name (str, optional): Prompt file name.
-                Defaults to 'moderate_database'.
-            max_output_tokens (int, optional): Maximum completion tokens.
-                Defaults to 512.
-            temperature (float, optional): The higher the more unstable.
-                Defaults to 0.0.
-
-        Returns:
-            BasicChain: _description_
-        """
-        agent = DatabaseModerateAgent(
-            open_ai_key=open_ai_key,
-            prompt_name=prompt_name,
-            max_output_tokens=max_output_tokens,
-            temperature=temperature
-        )
-        retriever = BasicQuestionModerateRetriever(
-            include_tables=include_tables)
-        return cls(agent=agent, retriever=retriever)
+        super().__init__(agent, retriever, **kwargs)
 
     def perform(self, user_input: str,
                 with_explanation: bool = False) -> Any:

@@ -12,12 +12,14 @@ openai = "*"
 matplotlib = "*"
 seaborn = "*"
 psycopg2-binary = "*"
-langchain = "*"
+langchain = "0.0.235"
 python-environ = "*"
 pgeocode = "*"
 SQLAlchemy = "*"
 pytest="*"
 tiktoken="*"
+torch="*"
+pynvml="*"
 [dev-packages]
 
 [requires]

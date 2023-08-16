@@ -1,34 +1,24 @@
-from llmreflect.Agents.BasicAgent import OpenAIAgent
+from llmreflect.Agents.BasicAgent import Agent
+from llmreflect.LLMCore.LLMCore import LLMCore
 from llmreflect.Retriever.BasicRetriever import \
     BasicQuestionModerateRetriever
+from llmreflect.Utils.log import get_logger
 
 
-class DatabaseModerateAgent(OpenAIAgent):
-    """
-    Agent for filtering out illegal and malicious requests.
-    """
-    def __init__(self, open_ai_key: str,
-                 prompt_name: str = 'moderate_database',
-                 max_output_tokens: int = 512,
-                 temperature: float = 0.0,
-                 database_topic: str = 'patient data'):
+class DatabaseModerateAgent(Agent):
+    PROMPT_NAME = "moderate_database"
+
+    def __init__(self, llm_core: LLMCore,
+                 database_topic: str = 'patient data',
+                 **kwargs):
         """
         Agent for filtering out illegal and malicious requests.
         Args:
-            open_ai_key (str): API key to connect to chatgpt service.
-            prompt_name (str, optional): name for the prompt json file.
-                Defaults to 'moderate_database'.
-            max_output_tokens (int, optional): maximum completion length.
-                Defaults to 512.
-            temperature (float, optional): how consistent the llm performs.
-                The lower the more consistent. To obtain diverse questions,
-                a high temperature is recommended.
-                Defaults to 0.0.
+            llm_core (LLMCore): the llm core to use for prediction.
+            database_topic (str): the main topic of the database.
         """
-        super().__init__(open_ai_key=open_ai_key,
-                         prompt_name=prompt_name,
-                         max_output_tokens=max_output_tokens,
-                         temperature=temperature)
+        super().__init__(llm_core=llm_core, **kwargs)
+        object.__setattr__(self, "logger", get_logger(self.__class__.__name__))
         object.__setattr__(self, 'database_topic', database_topic)
 
     def equip_retriever(self, retriever: BasicQuestionModerateRetriever):
