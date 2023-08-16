@@ -4,34 +4,26 @@ Module llmreflect.Agents.EvaluationAgent
 Classes
 -------
 
-`DatabaseGradingAgent(open_ai_key: str, prompt_name: str = 'grading_database', max_output_tokens: int = 512, temperature: float = 0.0)`
-:   This is the agent class use for grading database command generation.
+`DatabaseGradingAgent(llm_core: llmreflect.LLMCore.LLMCore.LLMCore, **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
-    Agent class for grading the performance of database command generator.
+    agent class use for grading database command generation.
     Args:
-        open_ai_key (str): API key to connect to chatgpt service.
-        prompt_name (str, optional): name for the prompt json file.
-            Defaults to 'grading_database'.
-        max_output_tokens (int, optional): maximum completion length.
-            Defaults to 512.
-        temperature (float, optional): how consistent the llm performs.
-            The lower the more consistent. Defaults to 0.0.
+        llm_core (LLMCore): the llm core to use for prediction.
 
     ### Ancestors (in MRO)
 
-    * llmreflect.Agents.BasicAgent.OpenAIAgent
     * llmreflect.Agents.BasicAgent.Agent
-    * langchain.chains.llm.LLMChain
-    * langchain.chains.base.Chain
-    * langchain.load.serializable.Serializable
-    * pydantic.main.BaseModel
-    * pydantic.utils.Representation
+    * llmreflect.Agents.BasicAgent.BasicAgent
     * abc.ABC
 
-    ### Methods
+    ### Class variables
 
-    `equip_retriever(self, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseEvaluationRetriever)`
+    `PROMPT_NAME`
     :
+
+    ### Methods
 
     `grade(self, request: str, sql_cmd: str, db_summary: str) ‑> dict`
     :   Convert LLM output into a score and an explanation.

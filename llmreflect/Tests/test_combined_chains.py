@@ -8,43 +8,45 @@ from llmreflect.Utils.log import get_logger, traces_2_str
 from llmreflect.LLMCore.LLMCore import LOCAL_MODEL, OPENAI_MODEL
 from decouple import config
 
-LOGGER = get_logger("test")
-
-MODEL_PATH = LOCAL_MODEL.upstage_70_b
-URI = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
-{config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
-
-INCLUDE_TABLES = [
-    'tb_patient',
-    'tb_patients_allergies',
-    'tb_appointment_patients',
-    'tb_patient_mmse_and_moca_scores',
-    'tb_patient_medications'
-]
-
-LOCAL_LLM_CONFIG = {
-    "max_output_tokens": 512,
-    "max_total_tokens": 5000,
-    "model_path": MODEL_PATH,
-    "n_batch": 512,
-    "n_gpus_layers": 4,
-    "n_threads": 16,
-    "temperature": 0.0,
-    "verbose": False
-}
-OPENAI_LLM_CONFIG = {
-    "llm_model": OPENAI_MODEL.gpt_3_5_turbo_0613,
-    "max_output_tokens": 512,
-    "open_ai_key": config("OPENAI_API_KEY"),
-    "temperature": 0.0
-}
-
 
 def in_workflow():
     return os.getenv("GITHUB_ACTIONS")\
         or os.getenv("TRAVIS") \
         or os.getenv("CIRCLECI") \
         or os.getenv("GITLAB_CI")
+
+
+if not bool(in_workflow()):
+    LOGGER = get_logger("test")
+
+    MODEL_PATH = LOCAL_MODEL.upstage_70_b
+    URI = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
+{config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
+
+    INCLUDE_TABLES = [
+        'tb_patient',
+        'tb_patients_allergies',
+        'tb_appointment_patients',
+        'tb_patient_mmse_and_moca_scores',
+        'tb_patient_medications'
+    ]
+
+    LOCAL_LLM_CONFIG = {
+        "max_output_tokens": 512,
+        "max_total_tokens": 5000,
+        "model_path": MODEL_PATH,
+        "n_batch": 512,
+        "n_gpus_layers": 4,
+        "n_threads": 16,
+        "temperature": 0.0,
+        "verbose": False
+    }
+    OPENAI_LLM_CONFIG = {
+        "llm_model": OPENAI_MODEL.gpt_3_5_turbo_0613,
+        "max_output_tokens": 512,
+        "open_ai_key": config("OPENAI_API_KEY"),
+        "temperature": 0.0
+    }
 
 
 @pytest.mark.skipif(bool(in_workflow()),

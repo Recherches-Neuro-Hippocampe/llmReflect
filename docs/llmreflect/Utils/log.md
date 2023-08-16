@@ -42,14 +42,14 @@ Functions
             when logger provided.
     
     Returns:
-        bool: _description_
+        bool: Whether to continue running LLM.
 
     
 `clear_logs()`
 :   remove all logs
 
     
-`export_log(dir: str)`
+`export_log(file_path: str)`
 :   A simple interface copying the log file to a designated directory.
     
     Args:
@@ -66,15 +66,18 @@ Functions
         logging.Logger: _description_
 
     
-`get_openai_tracer(id: str = '', budget: float = 0.1) ‑> Generator[llmreflect.Utils.log.OpenAITracer, None, None]`
-:   Get OpenAI callback handler in a context manager.
+`get_tracer(id: str = '', budget: float = 0.1) ‑> Generator[llmreflect.Utils.log.GeneralTracer, None, None]`
+:   Get local llm callback handler in a context manager.
+    
+    Yields:
+        GeneralTracer: An instance of the GeneralTracer class.
 
     
 `message(msg, color=None)`
 :   
 
     
-`openai_cb_2_str(cb: llmreflect.Utils.log.OpenAITracer) ‑> str`
+`tracer_2_str(cb: llmreflect.Utils.log.GeneralTracer) ‑> str`
 :   converting openai tracer info to one string.
     Args:
         cb (OpenAITracer): tracer/callback handlers for openai
@@ -83,9 +86,9 @@ Functions
         str: A string describing the cost
 
     
-`traces_2_str(cb: llmreflect.Utils.log.OpenAITracer) ‑> str`
+`traces_2_str(cb: llmreflect.Utils.log.GeneralTracer) ‑> str`
 :   converting openai tracer info to one string.
-    Similar to openai_cb_2_str function but with more details
+    Similar to tracer_2_str function but with more details
     Args:
         cb (OpenAITracer): tracer/callback handlers for openai
     
@@ -151,11 +154,17 @@ Classes
         called to format the event time. If there is exception information,
         it is formatted using formatException() and appended to the message.
 
-`LLMTRACE(input: str = '', output: str = '', completion_tokens: int = 0, prompt_tokens: int = 0, model_name: str = '', completion_cost: float = 0.0, prompt_cost: float = 0.0)`
-:   
-
-`OpenAITracer(id: str = '', budget: float = 0.01)`
+`GeneralTracer(id: str = '', budget: float = 0.1)`
 :   Callback Handler that tracks OpenAI info.
+    
+    This class is used for tracing LLM behaviors.
+    Initialize from id and budget.
+    Args:
+        id (str, optional): A id to give to the tracer.
+            Defaults to "".
+        budget (float, optional): A money budget to run the LLM.
+            Designed for OpenAI Api, prevent over spending.
+            Defaults to 0.1.
 
     ### Ancestors (in MRO)
 
@@ -170,19 +179,62 @@ Classes
 
     ### Instance variables
 
-    `budget`
-    :
+    `budget: float`
+    :   Return the budget
+        
+        Returns:
+            float: Budget (Money allowed to run the model)
 
-    `budget_rest`
-    :
+    `budget_rest: float`
+    :   Return rest of the budget.
+        
+        Returns:
+            float: Budget (Money left to run the model)
 
     ### Methods
 
     `on_chain_error(self, error: Exception | KeyboardInterrupt, *, run_id: uuid.UUID, parent_run_id: uuid.UUID | None = None, **kwargs: Any) ‑> Any`
-    :   Run when chain errors.
+    :   Called when LLM encounter into an error.
+        
+        Args:
+            error (Exception | KeyboardInterrupt): Error encountered.
+            run_id (UUID): Required by Langchain.
+            parent_run_id (UUID | None, optional): Required by Langchain.
+                Defaults to None.
+        
+        Returns:
+            Any: super().on_chain_error
 
     `on_llm_end(self, response: langchain.schema.output.LLMResult, **kwargs: Any) ‑> None`
-    :   Collect token usage.
+    :   Called when LLM finished completion.
+        
+        Args:
+            response (LLMResult): Langchain type class.
+        
+        Returns:
+            Nah.
 
     `on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) ‑> None`
-    :   Print out the prompts.
+    :   Called when LLM start to predict.
+        
+        Args:
+            serialized (Dict[str, Any]): Not used but required by Langchain.
+            prompts (List[str]): A list of prompts.(LLM input)
+
+`LLMTRACE(input: str = '', output: str = '', completion_tokens: int = 0, prompt_tokens: int = 0, model_name: str = '', completion_cost: float = 0.0, prompt_cost: float = 0.0)`
+:   A class to store required information to track LLM behabior.
+    Args:
+        input (str, optional): LLM input.
+            Defaults to "".
+        output (str, optional): LLM output.
+            Defaults to "".
+        completion_tokens (int, optional):
+            Number of tokens predicted by LLM. Defaults to 0.
+        prompt_tokens (int, optional):
+            Number of input tokens. Defaults to 0.
+        model_name (str, optional): Name of the model. Defaults to "".
+        completion_cost (float, optional):
+            Cost for completion, only used by OpenAI api. Defaults to 0..
+        prompt_cost (float, optional):
+            Cost for evaluating the input prompt,
+            only used for OpenAI api. Defaults to 0.

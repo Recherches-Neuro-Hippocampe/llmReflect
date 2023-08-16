@@ -4,13 +4,9 @@ Module llmreflect.Chains.DatabaseChain
 Classes
 -------
 
-`DatabaseAnswerChain(agent: llmreflect.Agents.DatabaseAgent.DatabaseAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseRetriever)`
-:   Abstract class for Chain class.
-    A chain class should be the atomic unit for completing a job.
-    A chain contains at least two components:
-    1. an agent 2. a retriever
-    A chain object must have the function to perform a job.
-    Each chain is also equipped with a logger
+`DatabaseAnswerChain(agent: llmreflect.Agents.DatabaseAgent.DatabaseAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseRetriever, **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     Chain for generating database query cmd based on questions in natural
     language.
@@ -23,34 +19,10 @@ Classes
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
 
-    ### Static methods
-
-    `from_config(uri: str, include_tables: List, open_ai_key: str, prompt_name: str = 'answer_database', max_output_tokens: int = 512, temperature: float = 0.0, sample_rows: int = 0, max_rows_return=500) ‑> llmreflect.Chains.BasicChain.BasicChain`
-    :   Initialize class from configurations
-        Args:
-            uri (str): uri to connect to the database
-            include_tables (List): a list of names of database tables
-                to include
-            open_ai_key (str): openai api key
-            prompt_name (str, optional): prompt file name.
-                Defaults to 'answer_database'.
-            max_output_tokens (int, optional): Maximum completion tokens.
-                Defaults to 512.
-            temperature (float, optional): How unstable the llm is.
-                Defaults to 0.0.
-            sample_rows (int, optional): Rows from db provided to llm
-                as a sample. Defaults to 0.
-            max_rows_return (int, optional): Maximum rows retrieve from db.
-                Defaults to 500.
-        
-        Returns:
-            BasicChain: A DatabaseAnswerChain object.
-
     ### Methods
 
     `perform(self, user_input: str, get_cmd: bool = True, get_db: bool = False, get_summary: bool = True) ‑> dict`
-    :   _summary_
-        
+    :   Core function of the chain. Obtain the LLM result based on input.
         Args:
             user_input (str): user's description
             get_cmd (bool, optional): if return cmd. Defaults to True.
@@ -89,6 +61,11 @@ Classes
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
 
+    ### Class variables
+
+    `REQUIRED_CHAINS`
+    :
+
     ### Methods
 
     `perform(self, user_input: str, get_cmd: bool = True, get_db: bool = False, get_summary: bool = True, log_fix: bool = True) ‑> dict`
@@ -111,13 +88,9 @@ Classes
                 'error': dict, error_logs: 'cmd', what sql cmd caused error,
                                             'error', what is the error
 
-`DatabaseGradingChain(agent: llmreflect.Agents.EvaluationAgent.DatabaseGradingAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseEvaluationRetriever)`
-:   Abstract class for Chain class.
-    A chain class should be the atomic unit for completing a job.
-    A chain contains at least two components:
-    1. an agent 2. a retriever
-    A chain object must have the function to perform a job.
-    Each chain is also equipped with a logger
+`DatabaseGradingChain(agent: llmreflect.Agents.EvaluationAgent.DatabaseGradingAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseEvaluationRetriever, **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     A chain for the following workflow:
     1. given by questions about a database and according
@@ -133,29 +106,13 @@ Classes
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
 
-    ### Static methods
-
-    `from_config(open_ai_key: str, uri: str, include_tables: list, max_output_tokens: int = 256, prompt_name: str = 'grading_database', temperature: float = 0.0) ‑> llmreflect.Chains.BasicChain.BasicChain`
-    :   Initialize an object of DatabaseGradingChain from configurations.
-        Args:
-            open_ai_key (str): openai api key.
-            max_output_tokens (int, optional): Maximum completion tokens.
-                Dont need to be long. Defaults to 256.
-            prompt_name (str, optional): Prompt file name.
-                Defaults to "grading_database".
-            temperature (float, optional): How unstable the llm is.
-                Defaults to 0.0.
-        
-        Returns:
-            BasicChain: A DatabaseGradingChain object.
-
     ### Methods
 
-    `perform(self, question: str, query: str, db_summary: str) ‑> dict`
-    :   _summary_
+    `perform(self, request: str, sql_cmd: str, db_summary: str) ‑> dict`
+    :   Core function of the chain. Obtain the LLM result based on input.
         
         Args:
-            question (str): queries about a dataset
+            request (str): queries about a dataset
             query (str): generated queries
             db_summary (str): execution summary
         
@@ -190,42 +147,10 @@ Classes
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
 
-    ### Static methods
+    ### Class variables
 
-    `from_config(uri: str, include_tables: list, open_ai_key: str, answer_chain_prompt_name: str = 'answer_database', fix_chain_prompt_name: str = 'fix_database', moderate_chain_prompt_name: str = 'moderate_database', max_output_tokens_a: int = 512, max_output_tokens_f: int = 512, max_output_tokens_m: int = 256, temperature_a: float = 0.0, temperature_f: float = 0.0, temperature_m: float = 0.0, sample_rows: int = 0, max_rows_return: int = 500, fix_patience: int = 3) ‑> llmreflect.Chains.BasicChain.BasicCombinedChain`
-    :   Initialize a DatabaseModerateNAnswerNFixChain object from configuration.
-        Args:
-            uri (str): A uri to connect to the database.
-            include_tables (list): A list of names of database tables
-                to include.
-            open_ai_key (str): openai api key.
-            answer_chain_prompt_name (str, optional): Prompt file for answer
-                chain. Defaults to "answer_database".
-            fix_chain_prompt_name (str, optional): Prompt file for fix chain.
-                Defaults to "fix_database".
-            moderate_chain_prompt_name (str, optional): prompt file for
-                moderate chain . Defaults to "moderate_database".
-            max_output_tokens_a (int, optional): Maximum completion tokens for
-                answering. Defaults to 512.
-            max_output_tokens_f (int, optional): Maximum completion tokens for
-                fixing. Defaults to 512.
-            max_output_tokens_m (int, optional): Maximum completion tokens for
-                moderation. Defaults to 512.
-            temperature_a (float, optional): temperature for answering chain.
-                Defaults to 0.0.
-            temperature_f (float, optional): temperature for fixing chain.
-                Defaults to 0.0.
-            temperature_m (float, optional): temperature for moderation chain.
-                Defaults to 0.0.
-            sample_rows (int, optional): Rows from db provided to llm
-                as a sample. Defaults to 0.
-            max_rows_return (int, optional): Maximum rows retrieve from db.
-                Defaults to 500.
-            fix_patience (int, optional): Maximum self-fix attempts allowed.
-                Defaults to 3.
-        
-        Returns:
-            BasicCombinedChain: An object of DatabaseModerateNAnswerNFixChain.
+    `REQUIRED_CHAINS`
+    :
 
     ### Methods
 
@@ -274,39 +199,10 @@ Classes
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
 
-    ### Static methods
+    ### Class variables
 
-    `from_config(uri: str, include_tables: List, open_ai_key: str, question_chain_prompt_name: str = 'question_database', answer_chain_prompt_name: str = 'answer_database', grading_chain_prompt_name: str = 'grading_database', q_max_output_tokens: int = 256, a_max_output_tokens: int = 512, g_max_output_tokens: int = 256, q_temperature: float = 0.7, a_temperature: float = 0.0, g_temperature: float = 0.0, sample_rows: int = 0, max_rows_return=500) ‑> llmreflect.Chains.BasicChain.BasicCombinedChain`
-    :   Initialize a DatabaseQnAGradingChain object.
-        Args:
-            uri (str): A uri to connect to the database.
-            include_tables (List): a list of names of database tables
-                to include.
-            open_ai_key (str): openai api key.
-            question_chain_prompt_name (str, optional): Prompt file name for
-                question chain. Defaults to 'question_database'.
-            answer_chain_prompt_name (str, optional): Prompt file name for
-                answer chain. Defaults to 'answer_database'.
-            grading_chain_prompt_name (str, optional): Prompt file name for
-                grading chain. Defaults to 'grading_database'.
-            q_max_output_tokens (int, optional): Maximum completion tokens for
-                generating questions. Defaults to 256.
-            a_max_output_tokens (int, optional): Maximum completion tokens for
-                generating answers. Defaults to 512.
-            g_max_output_tokens (int, optional): Maximum completion tokens for
-                evaluating answers. Defaults to 256.
-            q_temperature (float, optional): temperature for question.
-                Defaults to 0.7.
-            a_temperature (float, optional): temperature for answer.
-                Defaults to 0.0.
-            g_temperature (float, optional): temperature for grading.
-                Defaults to 0.0.
-            sample_rows (int, optional): Rows from db provided to llm
-                as a sample. Defaults to 0.
-            max_rows_return (int, optional): Maximum rows retrieve from db.
-                Defaults to 500.
-        Returns:
-            BasicCombinedChain: _description_
+    `REQUIRED_CHAINS`
+    :
 
     ### Methods
 
@@ -325,13 +221,9 @@ Classes
                 'explanation': str, reasons for such score, str
             }
 
-`DatabaseQuestionChain(agent: llmreflect.Agents.QuestionAgent.DatabaseQuestionAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseQuestionRetriever)`
-:   Abstract class for Chain class.
-    A chain class should be the atomic unit for completing a job.
-    A chain contains at least two components:
-    1. an agent 2. a retriever
-    A chain object must have the function to perform a job.
-    Each chain is also equipped with a logger
+`DatabaseQuestionChain(agent: llmreflect.Agents.QuestionAgent.DatabaseQuestionAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseQuestionRetriever, **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     A chain for creating questions given by a dataset.
     Args:
@@ -342,27 +234,6 @@ Classes
 
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
-
-    ### Static methods
-
-    `from_config(uri: str, include_tables: List, open_ai_key: str, prompt_name: str = 'question_database', max_output_tokens: int = 512, temperature: float = 0.7, sample_rows: int = 0) ‑> llmreflect.Chains.BasicChain.BasicChain`
-    :   Initialize class from configurations
-        Args:
-            uri (str): uri to connect to the database
-            include_tables (List): a list of names of database tables
-                to include
-            open_ai_key (str): openai api key
-            prompt_name (str, optional): prompt file name without json.
-            max_output_tokens (int, optional): maximum completion tokens.
-                Defaults to 512.
-            temperature (float, optional): how unstable the llm is.
-                Defaults to 0.7. Since this chain is used for generating
-                random questions. We would like it to be creative.
-            sample_rows (int, optional): rows from db provided to llm
-                as a sample. Defaults to 0.
-        
-        Returns:
-            BasicChain: A DatabaseQuestionChain object.
 
     ### Methods
 
@@ -376,13 +247,9 @@ Classes
         Returns:
             list: a list of questions, each question is a str object.
 
-`DatabaseSelfFixChain(agent: llmreflect.Agents.DatabaseAgent.DatabaseSelfFixAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseRetriever)`
-:   Abstract class for Chain class.
-    A chain class should be the atomic unit for completing a job.
-    A chain contains at least two components:
-    1. an agent 2. a retriever
-    A chain object must have the function to perform a job.
-    Each chain is also equipped with a logger
+`DatabaseSelfFixChain(agent: llmreflect.Agents.DatabaseAgent.DatabaseSelfFixAgent, retriever: llmreflect.Retriever.DatabaseRetriever.DatabaseRetriever, **kwargs)`
+:   Helper class that provides a standard way to create an ABC using
+    inheritance.
     
     A Basic chain class for fix database queries.
     Args:
@@ -393,29 +260,6 @@ Classes
 
     * llmreflect.Chains.BasicChain.BasicChain
     * abc.ABC
-
-    ### Static methods
-
-    `from_config(uri: str, include_tables: List, open_ai_key: str, prompt_name: str = 'fix_database', max_output_tokens: int = 512, temperature: float = 0.0, sample_rows: int = 0, max_rows_return: int = 500) ‑> llmreflect.Chains.BasicChain.BasicChain`
-    :   Initialize a DatabaseSelfFixChain object from configurations.
-        Args:
-            uri (str): A uri to connect to the database.
-            include_tables (List): A list of names of database tables
-                to include.
-            open_ai_key (str): openai api key.
-            prompt_name (str, optional): Prompt file name.
-                Defaults to 'fix_database'.
-            max_output_tokens (int, optional): Maximum completion tokens.
-                Defaults to 512.
-            temperature (float, optional): How unstable the llm is.
-                Defaults to 0.0.
-            sample_rows (int, optional): Rows from db provided to llm
-                as a sample. Defaults to 0.
-            max_rows_return (int, optional): Maximum rows retrieve from db.
-                Defaults to 500.
-        
-        Returns:
-            BasicChain: A DatabaseSelfFixChain object.
 
     ### Methods
 
