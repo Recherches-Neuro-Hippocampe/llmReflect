@@ -5,7 +5,6 @@ Future work...
 import os
 import pytest
 from llmreflect.Utils.log import get_logger, traces_2_str
-from llmreflect.LLMCore.LLMCore import LOCAL_MODEL, OPENAI_MODEL
 from decouple import config
 
 
@@ -17,6 +16,7 @@ def in_workflow():
 
 
 if not bool(in_workflow()):
+    from llmreflect.LLMCore.LLMCore import LOCAL_MODEL, OPENAI_MODEL
     LOGGER = get_logger("test")
 
     MODEL_PATH = LOCAL_MODEL.upstage_70_b
