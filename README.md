@@ -31,6 +31,7 @@ LOGGER = get_logger("test")
 
 
 def example_chain_running(local=False):
+    # If you have a local Llama.cpp supported model, you can specify `local=True`
 
     MODEL_PATH = LOCAL_MODEL.upstage_70_b
     URI = f"postgresql+psycopg2://{config('DBUSERNAME')}:\
