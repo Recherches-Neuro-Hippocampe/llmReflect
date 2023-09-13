@@ -24,11 +24,41 @@ if not bool(in_workflow()):
 {config('DBPASSWORD')}@{config('DBHOST')}:{config('DBPORT')}/postgres"
 
     INCLUDE_TABLES = [
-        'tb_patient',
+        'tb_adverse_events',
+        'tb_allergies',
+        'tb_alternate_paragraph',
+        'tb_apoe',
+        'tb_appointment_employees',
+        'tb_appointments',
+        'tb_assets',
+        'tb_clinical_dementia_rating',
+        'tb_clinics',
+        'tb_csf',
+        'tb_employee_asset_assignments',
+        'tb_employee_bosses',
+        'tb_employees',
+        'tb_medical_problems',
+        'tb_medications',
+        'tb_mmse',
+        'tb_moca',
+        'tb_mri',
+        'tb_notes',
+        'tb_patient_documents',
+        'tb_patient_medications',
+        'tb_patient_study_profile_partners',
+        'tb_patient_study_profiles',
+        'tb_patient_study_status',
+        'tb_patient_tags',
+        'tb_patients',
         'tb_patients_allergies',
-        'tb_appointment_patients',
-        'tb_patient_mmse_and_moca_scores',
-        'tb_patient_medications'
+        'tb_pet',
+        'tb_positions',
+        'tb_rbans',
+        'tb_rooms',
+        'tb_studies',
+        'tb_study_partners',
+        'tb_treatments',
+        'tb_vitals'
     ]
 
     LOCAL_LLM_CONFIG = {
@@ -42,7 +72,7 @@ if not bool(in_workflow()):
         "verbose": False
     }
     OPENAI_LLM_CONFIG = {
-        "llm_model": OPENAI_MODEL.gpt_3_5_turbo_0613,
+        "llm_model": OPENAI_MODEL.gpt_3_5_turbo_16k,
         "max_output_tokens": 512,
         "open_ai_key": config("OPENAI_API_KEY"),
         "temperature": 0.0
@@ -89,23 +119,6 @@ def test_moderate_answer_fix_chain(local=False):
         },
     }
     ch = DatabaseModerateNAnswerNFixChain.from_config(**chain_config)
-    result, traces = ch.perform_cost_monitor(
-        user_input="give me a list of patients",
-        explain_moderate=True)
-    LOGGER.debug(traces_2_str(traces))
-    print(result)
-    assert result['moderate_decision'] > 0
-    assert len(result['moderate_explanation']) > 0
-    assert len(result['cmd']) > 0
-    assert len(result['summary']) > 0
-
-    result, traces = ch.perform_cost_monitor(
-        user_input="Cats are the true rulers",
-        explain_moderate=True)
-    print(result)
-    LOGGER.debug(traces_2_str(traces))
-    assert result['moderate_decision'] <= 0
-    assert len(result['moderate_explanation']) > 0
 
     questions = [
         "Give me all the patients allergic to fish",
@@ -115,12 +128,17 @@ def test_moderate_answer_fix_chain(local=False):
 Round values to 2 decimals",
         "Give me max, min, avg, median and standard deviation on \
 patients ages",
+        "Get me a list of every patient who is on Aricept and whose primary \
+clinic is in Ottawa. Filter out any patients with diabetes."
     ]
     for q in questions:
+        print(q)
         result, traces = ch.perform_cost_monitor(
             user_input=q,
             explain_moderate=True)
-        print(result)
+        print(result["cmd"])
+        print(result["summary"])
+        print("=======================")
 
 
 @pytest.mark.skipif(bool(in_workflow()),

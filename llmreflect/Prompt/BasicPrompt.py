@@ -233,8 +233,7 @@ class BasicPrompt(object):
 
     @property
     def completion_head_up(self):
-        # txt = ""
-        txt = "### User:"
+        txt = ""
         for key in self._format_dict.keys():
             if self._format_dict[key]['type'] == "INPUT":
                 txt += "\n"
@@ -243,4 +242,4 @@ class BasicPrompt(object):
                 txt += "{"
                 txt += key
                 txt += "}"
-        return txt + "\n\n" + "### Assistant:" + "\n"
+        return txt + "\n\n"
