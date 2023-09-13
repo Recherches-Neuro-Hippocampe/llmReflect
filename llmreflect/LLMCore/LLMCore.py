@@ -16,7 +16,7 @@ from langchain.schema import RUN_KEY, RunInfo, LLMResult
 from langchain.llms import LlamaCpp
 import os
 import logging
-from pydantic import Field, root_validator
+from pydantic import Field
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 import gc
 
@@ -249,7 +249,7 @@ class Llama2Cpp(LlamaCpp):
     n_gqa: int = 8
     """Mandatory settings for 65b model"""
 
-    @root_validator()
+    # @model_validator(mode="after")
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate that llama-cpp-python library is installed."""
         model_path = values["model_path"]

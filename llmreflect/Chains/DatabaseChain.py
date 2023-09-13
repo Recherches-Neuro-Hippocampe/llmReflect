@@ -283,7 +283,6 @@ class DatabaseAnswerNFixChain(BasicCombinedChain):
         assert len(chains) == 2
         self.fix_patience = fix_patience
         for chain in self.chains:
-            print(chain)
             if chain.__class__ == DatabaseAnswerChain:
                 self.answer_chain = chain
             elif chain.__class__ == DatabaseSelfFixChain:

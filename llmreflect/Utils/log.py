@@ -233,7 +233,9 @@ class CustomFormatter(logging.Formatter):
 
     def __init__(self, fmt):
         super().__init__()
-        self.fmt = fmt
+        self.fmt = fmt + "\n"
+        self.fmt = "%(asctime)s - %(name)s - %(levelname)s - " + \
+            self.reset + "%(message)s"
         self.FORMATS = {
             logging.DEBUG: self.grey + self.fmt + self.reset,
             logging.INFO: self.blue + self.fmt + self.reset,
