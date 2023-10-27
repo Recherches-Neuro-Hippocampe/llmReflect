@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmreflect"
-version = "0.1.10"
+version = "0.1.11"
 description = "a package for llm self-reflection"
 authors = ["alchemistwu <alchemistwu0521@gmail.com>"]
 readme = "README.md"
@@ -11,7 +11,7 @@ pandas = "^2.0.3"
 python-decouple = "^3.8"
 openai = "^0.27.8"
 psycopg2-binary = "^2.9.6"
-langchain = "^0.0.235"
+langchain = "^0.0.324"
 SQLAlchemy = "^2.0.17"
 flake8 = "^6.0.0"
 pytest = "^7.4.0"
