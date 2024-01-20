@@ -2,10 +2,11 @@ import logging
 import os
 import shutil
 from uuid import UUID
-from langchain.callbacks import OpenAICallbackHandler
-from langchain.callbacks.openai_info import standardize_model_name
-from langchain.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
-from langchain.callbacks.openai_info import get_openai_token_cost_for_model
+from langchain_community.callbacks import OpenAICallbackHandler
+from langchain_community.callbacks.openai_info import standardize_model_name
+from langchain_community.callbacks.openai_info import MODEL_COST_PER_1K_TOKENS
+from langchain_community.callbacks.openai_info import \
+    get_openai_token_cost_for_model
 from typing import Dict, Any, List, Generator, Optional
 from langchain.schema import LLMResult
 from contextlib import contextmanager
