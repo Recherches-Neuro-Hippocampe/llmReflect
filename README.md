@@ -108,4 +108,25 @@ Donepezil and are considered as overweight."
     LOGGER.info(f"LLM Generated Postgresql: {result['cmd']}")
     LOGGER.info(f"Postgresql Execution Result: {result['summary']}")
 ```
+### 2. Case 2: Semantic Search on Files
 
+```
+from llmreflect.Retriever.VectorDatabaseRetriever import \
+    VectorDatabaseRetriever
+
+search_engine = VectorDatabaseRetriever()
+# Initialize the search engine
+question = "How do we recruit new patients?"
+result = search_engine.retrieve(question)
+assert len(result.response) > 0
+```
+
+The returned result is a pandatic model which contains 2 attributes:
+    1. `response`: str, the response from LLM describing the returned result.
+    2. `citations`: List [Citation], the citations/reference for the resources.
+
+As for the pandantic model `Citation`, it contains 4 attributes:
+    1. `text`: str, text content of the citation.
+    2. `file_path`: str, the file path for the source file.
+    3. `bucket`: str, the bucket name for the source s3 bucket.
+    4. `page`: int, page number for the source in this file.
