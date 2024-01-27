@@ -1,4 +1,6 @@
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
+from llmreflect.Retriever.VectorDatabaseRetriever import \
+    VectorDatabaseRetriever
 
 
 def example_edit_prompt():
@@ -103,3 +105,12 @@ Donepezil and are considered as overweight."
     LOGGER.info(f"LLM Moderate Comment: {result['moderate_explanation']}")
     LOGGER.info(f"LLM Generated Postgresql: {result['cmd']}")
     LOGGER.info(f"Postgresql Execution Result: {result['summary']}")
+
+
+if __name__ == "__main__":
+
+    search_engine = VectorDatabaseRetriever()
+    while True:
+        question = input("User:")
+        result = search_engine.retrieve(question)
+        print(result.response)

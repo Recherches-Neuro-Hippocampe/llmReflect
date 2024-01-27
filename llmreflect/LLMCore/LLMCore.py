@@ -3,7 +3,7 @@ from langchain.chains import LLMChain
 from llmreflect.Prompt.BasicPrompt import BasicPrompt
 from langchain.base_language import BaseLanguageModel
 from abc import ABC
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from llmreflect.Utils.log import get_logger
 from llmreflect.Utils.log import check_current_openai_balance
 from llmreflect.Utils.log import general_trace_var
@@ -13,14 +13,12 @@ from langchain.callbacks.manager import CallbackManagerForChainRun
 import inspect
 from langchain.load.dump import dumpd
 from langchain.schema import RUN_KEY, RunInfo, LLMResult
-from langchain.llms import LlamaCpp
+from langchain_community.llms import LlamaCpp
 import os
 import logging
 from pydantic import Field
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 import gc
-
-from decouple import config
 logger = logging.getLogger(__name__)
 
 Callbacks = Optional[Union[List[BaseCallbackHandler], BaseCallbackManager]]
@@ -30,7 +28,7 @@ class LOCAL_MODEL:
     """
     A constant class storing local model path
     """
-    base_dir = config("LOCAL_MODEL")
+    base_dir = os.path.join(os.path.dirname(__file__), 'model_weights')
     upstage_70_b = os.path.join(
         base_dir,
         "upstage-llama-2-70b-instruct-v2.ggmlv3.q5_K_M.bin")
