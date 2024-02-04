@@ -23,6 +23,7 @@ from llama_index.query_engine import CitationQueryEngine
 from typing import List, Tuple
 from pydantic import BaseModel
 from llama_index.indices.base import BaseIndex
+from llmreflect.Utils.log import get_logger
 
 
 def get_secret(
@@ -54,15 +55,48 @@ def get_secret(
     return secret_dict
 
 
-def get_vector_store():
+def get_vector_store(
+        user_name: str = "",
+        password: str = "",
+        host: str = "",
+        port: str = "",
+):
     """
     Return an instance of the vector store.
+    Args:
+        user_name: str = "",
+        password: str = "",
+        host: str = "",
+        port: str = ""
+    Output:
+        vector_store: PGVectorStore
+        cursor: cursor for vector db (used only for check status)
     """
-    secrets = get_secret(secret_name="vectordb")
-    user_name = secrets.get("username")
-    password = secrets.get("password")
-    host = secrets.get("host")
-    port = secrets.get("port")
+    logger = get_logger(name="VectorRetriever")
+    if user_name or password or host or port:
+        if password and host and port:
+            logger.info("Using manual setting to connect to vector db")
+        else:
+            logger.warning(
+                (
+                    "To use manual settings to connect to vector db, you"
+                    "have to provide all: user_name, password, host, and port"
+                )
+            )
+            secrets = get_secret(secret_name="vectordb")
+            user_name = secrets.get("username")
+            password = secrets.get("password")
+            host = secrets.get("host")
+            port = secrets.get("port")
+    else:
+        logger.info("Using secret manager vars to connect to vector db")
+        secrets = get_secret(secret_name="vectordb")
+        user_name = secrets.get("username")
+        password = secrets.get("password")
+        host = secrets.get("host")
+        port = secrets.get("port")
+
+        
     connection_string = f"postgresql://{user_name}:{password}@{host}:{port}"
     db_name = "vector_db"
     conn = psycopg2.connect(connection_string)
@@ -329,19 +363,35 @@ def check_db_size(cursor):
 
 
 def get_indices(
-        fs: s3fs.S3FileSystem) -> Tuple[BaseIndex, BaseIndex]:
+        fs: s3fs.S3FileSystem,
+        user_name: str = "",
+        password: str = "",
+        host: str = "",
+        port: str = ""
+    ) -> Tuple[BaseIndex, BaseIndex]:
     """
     Get indices, including a Summary index and a vector index.
     Notice that the summary index is not used for now.
     Input:
         fs: the s3 bucket file system
+        secret_name: str = "vectordb",
+        user_name: str = "",
+        password: str = "",
+        host: str = "",
+        port: str = "",
+        db_name: str = ""
     Return:
         Tuple[BaseIndex, BaseIndex]:
             index_summary: BaseIndex
             index_vector: BaseIndex
 
     """
-    vector_store, _ = get_vector_store()
+    vector_store, _ = get_vector_store(
+        user_name=user_name,
+        password=password,
+        host=host,
+        port=port
+    )
     storage_context = get_storage_context(
         vector_store=vector_store,
         fs=fs
@@ -382,7 +432,11 @@ class VectorDatabaseRetriever:
             similarity_top_k: int = 10,
             hnsw_ef_search: int = 1000,
             ivfflat_probes: int = 20,
-            citation_chunk_size: int = 1024) -> None:
+            citation_chunk_size: int = 1024,
+            user_name: str = "",
+            password: str = "",
+            host: str = "",
+            port: str = "") -> None:
         """
         Retriever class based on BasicRetriever.
         This class leverage the functionality of llamaindex
@@ -413,7 +467,13 @@ class VectorDatabaseRetriever:
         self.similarity_top_k = similarity_top_k
         self.citation_chunk_size = citation_chunk_size
 
-        self._index_summary, self._index_vector = get_indices(self.file_system)
+        self._index_summary, self._index_vector = get_indices(
+            self.file_system,
+            user_name=user_name,
+            password=password,
+            host=host,
+            port=port
+        )
         self._retriever = self._index_vector.as_retriever(
             similarity_top_k=self.similarity_top_k,
             vector_store_kwargs={

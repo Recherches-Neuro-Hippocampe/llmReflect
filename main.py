@@ -111,6 +111,14 @@ if __name__ == "__main__":
 
     search_engine = VectorDatabaseRetriever()
     while True:
-        question = input("User:")
+        question = input("[User] ")
         result = search_engine.retrieve(question)
-        print(result.response)
+        # print(f"[MODEL RESPONSE] {result.response}")
+        print("[Foundings]\n")
+        for item in result.citations:
+            print(f"----[bucket] {item.bucket}")
+            print(f"----[file path] {item.file_path}")
+            print(f"----[page number] {item.page}")
+            plain_text = item.text[:500].replace("\n", " ")
+            print(f"----[Text content] {plain_text} ... \n")
+        print("================================")
