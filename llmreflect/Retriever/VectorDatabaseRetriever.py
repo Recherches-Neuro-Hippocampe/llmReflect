@@ -96,7 +96,6 @@ def get_vector_store(
         host = secrets.get("host")
         port = secrets.get("port")
 
-        
     connection_string = f"postgresql://{user_name}:{password}@{host}:{port}"
     db_name = "vector_db"
     conn = psycopg2.connect(connection_string)
@@ -368,7 +367,7 @@ def get_indices(
         password: str = "",
         host: str = "",
         port: str = ""
-    ) -> Tuple[BaseIndex, BaseIndex]:
+) -> Tuple[BaseIndex, BaseIndex]:
     """
     Get indices, including a Summary index and a vector index.
     Notice that the summary index is not used for now.
