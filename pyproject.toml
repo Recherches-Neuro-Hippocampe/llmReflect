@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmreflect"
-version = "0.1.12"
+version = "0.1.13"
 description = "a package for llm self-reflection"
 authors = ["alchemistwu <alchemistwu0521@gmail.com>"]
 readme = "README.md"
