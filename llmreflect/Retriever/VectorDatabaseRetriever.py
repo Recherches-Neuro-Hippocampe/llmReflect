@@ -120,7 +120,7 @@ def get_vector_store(
         user=user_name,
         password=password,
         host=host,
-        port="5432"
+        port=port
     )
     cursor = conn.cursor()
 
